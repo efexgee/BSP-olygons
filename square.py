@@ -1,40 +1,41 @@
 #!/usr/bin/env python
 
-''' Take this library: https://pillow.readthedocs.io/en/5.0.0/
-
-Produce a 500x500px image containing a centered 200x200px white
-square on a black background as a png file.'''
-
 from PIL import Image, ImageDraw
-from numpy import array, ndarray # make Alec-compatible
+from random import choice
+
+COLORS=("red", "green", "blue", "cyan", "magenta", "yellow") 
 
 IMG_SIZE=(500,500)
-SQUARE_SIZE=(200,200)
+SQUARE_SIZE=200
 
 IMG_COLOR="black"
-SQUARE_COLOR="white"
 
-def halve(dimension):
-    ''' Halves either integers (i.e. sizes) or numpy arrays (i.e. coordinates) '''
-    ''' I may want to change the definition of "half" '''
-    
-    assert isinstance(dimension, (int, ndarray)), "Not an int or numpy array: {}".format(dimension)
-    return dimension // 2
+def centered_text_start(bounds, text):
+    ''' Given a string and the coordinates of a rectangle
+        calculate where the text should start to be centered
+        (NOT IMPLEMENTED) '''
+    return
+
+def draw_square(image, top_left, size, color=None, label=None):
+    ''' Draw a square on an image. (label is not implemented) '''
+    default_color = "white"
+
+    # allow for colors when we debug sub-squares later
+    if not color:
+        color = default_color
+
+    draw = ImageDraw.Draw(img)
+
+    bottom_right = (top_left[0] + size, top_left[1] + size)
+
+    draw.rectangle([top_left, bottom_right], color, color)
 
 # main
 #TODO I should have an import guard
 img = Image.new("RGBA", IMG_SIZE, IMG_COLOR)
-img_drw = ImageDraw.Draw(img)
 
-# I'm doing coordinate math as numpy arrays
-# It would be cool to extend the Image and ImageDraw classes
-# to support ndarrays. But would it be dumb?
-img_dims= array((img.width, img.height))
-square_dims= array(SQUARE_SIZE)
+square_top_left = ((IMG_SIZE[0] - SQUARE_SIZE) / 2, (IMG_SIZE[1] - SQUARE_SIZE) / 2)
 
-squ_start_coords = halve(img_dims) - halve(square_dims)
-squ_end_coords = squ_start_coords + square_dims
+draw_square(img, square_top_left, SQUARE_SIZE, color=choice(COLORS))
 
-img_drw.rectangle([tuple(squ_start_coords), tuple(squ_end_coords)], SQUARE_COLOR, SQUARE_COLOR)
 
-img.save("square.png")
