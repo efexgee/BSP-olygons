@@ -289,7 +289,7 @@ def drawtree(t):
         print_level(proot, -xmin, i)
         print()
         i += 1
-    print("huh")
+    #print("huh")
 
     if proot.height >= MAX_HEIGHT:
         print("This tree is taller than %d, and may be drawn incorrectly.".format(MAX_HEIGHT))
@@ -318,7 +318,7 @@ def draw_bst(nums):
     for num in nums[1:]:
         root = insert(num, root)
     drawtree(root)
-    print("ha")
+    #print("ha")
 
 def draw_random_bst(n):
     """ Draw random binary search tree of n nodes

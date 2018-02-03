@@ -127,11 +127,18 @@ class tree():
 
         return walk(self.root)
 
-    def __repr__(self:
+    def __repr__(self):
         print("\n") #for ipython
         return str(draw_bst(self.aslist()))
 
 testree = tree(0, None)
 testree.root.left = node(1, testree.root, None)
 testree.root.right = node(2, testree.root, None)
+testree.root.right = node(3, testree.root.left, None)
+testree.root.right = node(4, testree.root, None)
+
+#testree.root.left.right = node(3, testree.root, None)
+#testree.root.right.right = node(4, testree.root, None)
+#testree.root.left.left.right = node(5, testree.root, None)
+#testree.root.right.left = node(6, testree.root, None)
 
