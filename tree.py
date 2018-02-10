@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from PIL import Image, ImageDraw
-from random import choice
+from random import choice, randint
 from drawtree import draw_bst
 
 COLORS=("red", "green", "blue", "cyan", "magenta", "yellow") 
@@ -18,6 +18,7 @@ class xy():
         self.y(y)
 
     def x(self, x):
+        #TODO rewrite as "properties"
         ''' set x with data validation '''
         assert isinstance(x, int), "value is not an integer: {}".format(x)
         assert x >= 0, "value is not positive: {}".format(x)
@@ -110,13 +111,49 @@ class node():
         self.rect = rectangle
 
     def __repr__(self):
-        return "{} - p:{} l:{} r:{} rect: {}".format(self.id, self.parent.id, self.left.id, self.right.id, self.rectangle)
+        if self.parent is None:
+            parent = None
+        else:
+            parent = self.parent.id
+
+        if self.left is None:
+            left = None
+        else:
+            left = self.left.id
+
+        if self.right is None:
+            right = None
+        else:
+            right = self.right.id
+
+        return "{} - p: ({}) l: ({}) r: ({}) rect: {}".format(self.id, parent, left, right, self.rect)
 
 class tree():
     ''' a binary tree of rectangles '''
 
     def __init__(self, id, rectangle):
         self.root = node(id, None, rectangle) 
+
+    def insert(self, id, rectangle):
+        cur = self.root
+
+        while True:
+            parent = cur
+            if id < cur.id:
+                cur = cur.left
+                if cur is None:
+                    cur = node(id, parent, rectangle)
+                    cur.parent.left = cur
+                    return
+            elif id > cur.id:
+                cur = cur.right
+                if cur is None:
+                    cur = node(id, parent, rectangle)
+                    cur.parent.right = cur
+                    return
+            else:
+                print("Something broke. Maybe a duplicate value. Those aren't supported yet, though apparently that would be trivial.")
+                return
 
     def aslist(self):
         def walk(node):
@@ -128,17 +165,13 @@ class tree():
         return walk(self.root)
 
     def __repr__(self):
+        #DEBUG - print a blank like to make output OK in iPython
         print("\n") #for ipython
+        #draw_bst only prints to STDOUT so casting to str in order
+        # to satisfy the __repr__ requirement causes it to also
+        # print None after the tree
         return str(draw_bst(self.aslist()))
 
-testree = tree(0, None)
-testree.root.left = node(1, testree.root, None)
-testree.root.right = node(2, testree.root, None)
-testree.root.right = node(3, testree.root.left, None)
-testree.root.right = node(4, testree.root, None)
-
-#testree.root.left.right = node(3, testree.root, None)
-#testree.root.right.right = node(4, testree.root, None)
-#testree.root.left.left.right = node(5, testree.root, None)
-#testree.root.right.left = node(6, testree.root, None)
-
+testree = tree(66, None)
+for i in range(12):
+    testree.insert(randint(1,100), None)
