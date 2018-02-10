@@ -289,7 +289,6 @@ def drawtree(t):
         print_level(proot, -xmin, i)
         print()
         i += 1
-    #print("huh")
 
     if proot.height >= MAX_HEIGHT:
         print("This tree is taller than %d, and may be drawn incorrectly.".format(MAX_HEIGHT))
@@ -318,7 +317,6 @@ def draw_bst(nums):
     for num in nums[1:]:
         root = insert(num, root)
     drawtree(root)
-    #print("ha")
 
 def draw_random_bst(n):
     """ Draw random binary search tree of n nodes
@@ -329,6 +327,12 @@ def draw_random_bst(n):
     if 0 < n < MAX_HEIGHT:
         while len(nums) != n:
             nums.add(randint(1, max_num))
+    #DEBUG
+    # The resulting list seems to be pseudo-sorted
+    # It looks like the output of a binary tree
+    # All elements below and above the first element
+    #   are in ascending order though they are interspersed
+    return list(nums)
     draw_bst(list(nums))
 
 
