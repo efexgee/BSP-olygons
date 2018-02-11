@@ -78,6 +78,15 @@ class xy():
         elif isinstance(value, int):
             return xy(self.x // value, self.y // value)
 
+    def __gt__(self, value):
+        # Both x and y are greater than value's x and y
+        # i.e. a rectangle with dimensions 'value' could
+        # fit inside a rectangle with our dimensions
+        if self.x > value.x and self.y > value.y:
+            return True
+        else:
+            return False
+
     def astuple(self):
         return (self.x, self.y)
 
@@ -166,9 +175,11 @@ class rectangle():
 
             label_size = xy(draw.textsize(label))
 
-            label_origin = self.orig + self.dims // 2 - label_size // 2
+            #Only print a label if it fits inside the rectangle
+            if label_size < self.dims:
+                label_origin = self.orig + self.dims // 2 - label_size // 2
 
-            draw.text(label_origin.astuple(), label, fill=rectangle._DEFAULT_TEXT)
+                draw.text(label_origin.astuple(), label, fill=rectangle._DEFAULT_TEXT)
 
     def __repr__(self):
         return "rectangle({}, {}, {}, {}, {})".format(self.orig, self.dims, self.label, self.color, self._border)
