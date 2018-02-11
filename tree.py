@@ -14,54 +14,69 @@ class xy():
     def __init__(self, x, y=None):
         #TODO Can I check for "isindexable"?
         if isinstance(x, tuple):
-            self.x(x[0])
-            self.y(x[1])
+            self.x = x[0]
+            self.y = x[1]
         elif isinstance(x, int):
-            self.x(x)
+            self.x = x
 
             if y is None:
-                self.y(x)
+                self.y = x
             else:
-                self.y(y)
+                self.y = y
         else:
             print("Arguments aren't int or tuple: x={} y={}".format(x, y))
 
-    def x(self, x):
-        #TODO rewrite as "properties"
-        ''' set x with data validation '''
-        assert isinstance(x, int), "value is not an integer: {}".format(x)
-        assert x >= 0, "value is not positive: {}".format(x)
-        self._x = x
+    #TODO Are these properties correctly done?
+    #TODO Do these properties have to be duplicated?
+    @property
+    def x(self):
+        return self._x
 
-    def y(self, y):
-        ''' set y with data validation '''
-        assert isinstance(y, int), "value is not an integer: {}".format(y)
-        assert y >= 0, "value is not positive: {}".format(y)
-        self._y = y
+    @x.setter
+    def x(self, value):
+        assert isinstance(value, int), "value is not an integer: {}".format(value)
+        assert value >= 0, "value is not positive: {}".format(value)
+        self._x = value
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        assert isinstance(value, int), "value is not an integer: {}".format(value)
+        assert value >= 0, "value is not positive: {}".format(value)
+        self._y = value
 
     def __add__(self, value):
-        return xy(self._x + value._x, self._y + value._y)
+        if isinstance(value, xy):
+            return xy(self.x + value.x, self.y + value.y)
+        elif isinstance(value, int):
+            return xy(self.x + value, self.y + value)
 
     def __sub__(self, value):
-        return xy(self._x - value._x, self._y - value._y)
+        if isinstance(value, xy):
+            return xy(self.x - value.x, self.y - value.y)
+        elif isinstance(value, int):
+            return xy(self.x - value, self.y - value)
 
     def __mul__(self, value):
         if isinstance(value, xy):
-            return xy(self._x * value._x, self._y * value._y)
+            return xy(self.x * value.x, self.y * value.y)
         elif isinstance(value, int):
-            return xy(self._x * value, self._y * value)
+            return xy(self.x * value, self.y * value)
 
     def __floordiv__(self, value):
         if isinstance(value, xy):
-            return xy(self._x // value._x, self._y // value._y)
+            return xy(self.x // value.x, self.y // value.y)
         elif isinstance(value, int):
-            return xy(self._x // value, self._y // value)
+            return xy(self.x // value, self.y // value)
 
     def astuple(self):
-        return (self._x, self._y)
+        return (self.x, self.y)
 
     def __repr__(self):
-        return "({},{})".format(self._x, self._y)
+        return "({},{})".format(self.x, self.y)
 
 class rectangle():
     _DEFAULT_COLOR = "white"
@@ -100,7 +115,7 @@ class rectangle():
         half_size = self.dims // xy(2,1)
 
         left = rectangle(self.orig, half_size)
-        right = rectangle(self.orig + xy(half_size._x, 0), half_size)
+        right = rectangle(self.orig + xy(half_size.x, 0), half_size)
 
         return left, right
 
@@ -108,7 +123,7 @@ class rectangle():
         half_size = self.dims // xy(1,2)
 
         top = rectangle(self.orig, half_size)
-        bottom = rectangle(self.orig + xy(0, half_size._y), half_size)
+        bottom = rectangle(self.orig + xy(0, half_size.y), half_size)
 
         return top, bottom
 
@@ -116,12 +131,12 @@ class rectangle():
         self._border = setting
 
     def show(self):
-        # Create an image to draw on. This will be handled by
-        # tree object ultimately, I think
-        img = Image.new("RGBA", (500, 500), "black")
+        #TODO Does having to add 1 indicate a problem?
 
-        # Create a draw to draw on. This will stay in here,
-        # I think
+        img_size = self.orig + self.dims + 1
+
+        img = Image.new("RGBA", img_size.astuple(), "black")
+
         draw = ImageDraw.Draw(img)
 
         self.add_to_draw(draw)
@@ -229,13 +244,19 @@ class tree():
             print("Something went wrong. Direction has to start with 'v' or 'h' but is {}".format(direction))
             return
 
-        cur.a = node(self.max_id + 1, cur, rect_a)
+        new_a_id = self.max_id + 1
+        cur.a = node(new_a_id, cur, rect_a)
         self.max_id += 1
-        cur.b = node(self.max_id + 1, cur, rect_b)
+        new_b_id = self.max_id + 1
+        cur.b = node(new_b_id, cur, rect_b)
         self.max_id += 1
 
+        return new_a_id, new_b_id
+
     def show(self):
-        img = Image.new("RGBA", (500, 500), "black")
+        img_size = self.root.rect.orig + self.root.rect.dims + 1
+
+        img = Image.new("RGBA", img_size.astuple(), "black")
 
         draw = ImageDraw.Draw(img)
 
@@ -287,12 +308,15 @@ h = "horizontal"
 
 # xy objects
 ten = xy(10)
+fifty = xy(50)
 hundred = xy(100)
 two_hundred = hundred * 2
+five_hundred = hundred * 5
+thousand = xy(1000)
 
 # rectangles
 box = rectangle(ten, two_hundred, label="a box")
-root_box = rectangle(ten, two_hundred)
+root_box = rectangle(fifty, five_hundred)
 
 # something to draw on
 paper=Image.new("RGBA", (500, 500), "black")
