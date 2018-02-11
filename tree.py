@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#TODO camelcase for class names
+
 from PIL import Image, ImageDraw
 from random import choice, randint
 from drawtree import drawtree
@@ -11,8 +13,14 @@ class xy():
         coordinate or a lengths in the x and y axes, which
         supports addition and subtraction '''
 
+    #TODO try to implement iterator to be used as a tuple
+
     def __init__(self, x, y=None):
         #TODO Can I check for "isindexable"?
+        # is container? from abstract classes (wwad)
+        # hasattr getitem - would allow dicts
+        # or catch exception on index
+        # *var on call unpacks the doodad (WWAD)
         if isinstance(x, tuple):
             self.x = x[0]
             self.y = x[1]
@@ -26,8 +34,6 @@ class xy():
         else:
             print("Arguments aren't int or tuple: x={} y={}".format(x, y))
 
-    #TODO Are these properties correctly done?
-    #TODO Do these properties have to be duplicated?
     @property
     def x(self):
         return self._x
@@ -152,8 +158,6 @@ class rectangle():
         else:
             border = self.color
 
-        #TODO Should this be returning something instead of
-        # side-effecting?
         draw.rectangle([top_left, bottom_right], self.color, border)
 
         if not self.label is None:
@@ -164,7 +168,6 @@ class rectangle():
 
             label_origin = self.orig + self.dims // 2 - label_size // 2
 
-            #TODO Is this the correct way to reference a class variable?
             draw.text(label_origin.astuple(), label, fill=rectangle._DEFAULT_TEXT)
 
     def __repr__(self):
@@ -253,6 +256,18 @@ class tree():
 
         return new_a_id, new_b_id
 
+    def leaves(self, start_id=0):
+    # This only shows the id, not the rectangles
+        def walk(node):
+            if node.a is None and node.b is None:
+                return [node.id]
+            else:
+                return walk(node.a) + walk(node.b)
+
+        #return set(walk(self.root))
+        return set(walk(self.get(start_id)))
+
+
     def show(self):
         img_size = self.root.rect.orig + self.root.rect.dims + 1
 
@@ -266,8 +281,7 @@ class tree():
 
     def add_to_draw(self, draw):
         def draw_all(cur, draw):
-        #TODO Do I need to keep passing 'draw' or can I ghetto
-        # it up with scope
+        #TODO don't pass draw every time
             if cur is None:
                 return
             else:
@@ -276,16 +290,6 @@ class tree():
                 draw_all(cur.b, draw)
 
         draw_all(self.root, draw)
-
-    def aslist(self):
-    # This only shows the id, not the rectangles
-        def walk(node):
-            if node is None:
-                return []
-            else:
-                return [node.id] + walk(node.a) + walk(node.b)
-
-        return walk(self.root)
 
     def __repr__(self):
     # This only shows the id, not the rectangles
@@ -307,6 +311,7 @@ v = "vertical"
 h = "horizontal"
 
 # xy objects
+zero = xy(0)
 ten = xy(10)
 fifty = xy(50)
 hundred = xy(100)
@@ -316,7 +321,7 @@ thousand = xy(1000)
 
 # rectangles
 box = rectangle(ten, two_hundred, label="a box")
-root_box = rectangle(fifty, five_hundred)
+root_box = rectangle(zero, five_hundred)
 
 # something to draw on
 paper=Image.new("RGBA", (500, 500), "black")
@@ -327,3 +332,14 @@ box.add_to_draw(pic)
 boxwood = tree(root_box)
 boxwood.split(0, v)
 boxwood.split(2, v)
+
+# functions
+def spring(tree, num_splits, start_id=0):
+    split_types = ["vert", "horiz"]
+    leaves = tree.leaves(start_id)
+
+    for _ in range(num_splits):
+        split_id = leaves.pop()
+        split_type = choice(split_types)
+
+        leaves.update(tree.split(split_id, split_type))
