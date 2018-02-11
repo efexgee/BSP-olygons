@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
-''' ported to py3 by FXG 1/21/2018 '''
+''' "ported" to py3 by FXG 1/21/2018 '''
 
 class TreeNode(object):
     def __init__(self, val, left=None, right=None):
@@ -107,8 +107,15 @@ def build_ascii_tree_recursive(t):
         return None
 
     node = AsciiNode()
-    node.left = build_ascii_tree_recursive(t.left)
-    node.right = build_ascii_tree_recursive(t.right)
+
+    # Trying to non-destructively add support for my
+    # rectangle tree to this drawtree lib
+    if hasattr(t, "left"):
+        node.left = build_ascii_tree_recursive(t.left)
+        node.right = build_ascii_tree_recursive(t.right)
+    elif hasattr(t, "a"):
+        node.left = build_ascii_tree_recursive(t.a)
+        node.right = build_ascii_tree_recursive(t.b)
 
     if node.left:
         node.left.parent_dir = -1
@@ -116,7 +123,11 @@ def build_ascii_tree_recursive(t):
     if node.right:
         node.right.parent_dir = 1
 
-    node.label = '{}'.format(t.val)
+    if hasattr(t, "val"):
+        node.label = '{}'.format(t.val)
+    elif hasattr(t, "id"):
+        node.label = '{}'.format(t.id)
+
     node.lablen = len(node.label)
     return node
 

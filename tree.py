@@ -2,7 +2,7 @@
 
 from PIL import Image, ImageDraw
 from random import choice, randint
-from drawtree import draw_bst
+from drawtree import drawtree
 
 COLORS=("red", "green", "blue", "cyan", "magenta", "yellow") 
 
@@ -11,11 +11,20 @@ class xy():
         coordinate or a lengths in the x and y axes, which
         supports addition and subtraction '''
 
-    def __init__(self, x, y):
-        #assert isinstance(x, int) and isinstance(y, int), "x and y must be integers"
-        #assert x >= 0 and y >= 0, "x and y must be positive"
-        self.x(x)
-        self.y(y)
+    def __init__(self, x, y=None):
+        #TODO Can I check for "isindexable"?
+        if isinstance(x, tuple):
+            self.x(x[0])
+            self.y(x[1])
+        elif isinstance(x, int):
+            self.x(x)
+
+            if y is None:
+                self.y(x)
+            else:
+                self.y(y)
+        else:
+            print("Arguments aren't int or tuple: x={} y={}".format(x, y))
 
     def x(self, x):
         #TODO rewrite as "properties"
@@ -36,6 +45,18 @@ class xy():
     def __sub__(self, value):
         return xy(self._x - value._x, self._y - value._y)
 
+    def __mul__(self, value):
+        if isinstance(value, xy):
+            return xy(self._x * value._x, self._y * value._y)
+        elif isinstance(value, int):
+            return xy(self._x * value, self._y * value)
+
+    def __floordiv__(self, value):
+        if isinstance(value, xy):
+            return xy(self._x // value._x, self._y // value._y)
+        elif isinstance(value, int):
+            return xy(self._x // value, self._y // value)
+
     def astuple(self):
         return (self._x, self._y)
 
@@ -44,12 +65,14 @@ class xy():
 
 class rectangle():
     _DEFAULT_COLOR = "white"
-    _DEFAULT_BORDER = "black"
+    _DEFAULT_BORDER = "magenta"
+    _DEFAULT_TEXT = "black"
 
-    def __init__(self, origin, dimensions, color=None, border=False):
+    def __init__(self, origin, dimensions, label=None, color=None, border=True):
         ''' origin: coodinates of upper left pixel (xy object or tuple)
             dimensions: width and height (xy object or tuple) '''
 
+        #TODO check for blank args
         if isinstance(origin, tuple):
             self.orig = xy(origin[0], origin[1])
         else:
@@ -59,6 +82,8 @@ class rectangle():
             self.dims = xy(dimensions[0], dimensions[1])
         else:
             self.dims = dimensions
+
+        self.label = label
 
         if color:
             self.color = color
@@ -70,6 +95,22 @@ class rectangle():
             self._border_color = rectangle._DEFAULT_BORDER
         else:
             self._border_color = self.color
+
+    def v_split(self):
+        half_size = self.dims // xy(2,1)
+
+        left = rectangle(self.orig, half_size)
+        right = rectangle(self.orig + xy(half_size._x, 0), half_size)
+
+        return left, right
+
+    def h_split(self):
+        half_size = self.dims // xy(1,2)
+
+        top = rectangle(self.orig, half_size)
+        bottom = rectangle(self.orig + xy(0, half_size._y), half_size)
+
+        return top, bottom
 
     def set_border(self, setting):
         self._border = setting
@@ -83,6 +124,11 @@ class rectangle():
         # I think
         draw = ImageDraw.Draw(img)
 
+        self.add_to_draw(draw)
+
+        img.show()
+
+    def add_to_draw(self, draw):
         top_left = self.orig.astuple()
         bottom_right = (self.orig + self.dims).astuple()
 
@@ -91,24 +137,36 @@ class rectangle():
         else:
             border = self.color
 
+        #TODO Should this be returning something instead of
+        # side-effecting?
         draw.rectangle([top_left, bottom_right], self.color, border)
 
-        img.show()
+        if not self.label is None:
+            #ImageDraw needs text to be a string
+            label = str(self.label)
+
+            label_size = xy(draw.textsize(label))
+
+            label_origin = self.orig + self.dims // 2 - label_size // 2
+
+            #TODO Is this the correct way to reference a class variable?
+            draw.text(label_origin.astuple(), label, fill=rectangle._DEFAULT_TEXT)
 
     def __repr__(self):
-        return "rectangle({}, {}, {}, {})".format(self.orig, self.dims, self.color, self._border)
+        return "rectangle({}, {}, {}, {}, {})".format(self.orig, self.dims, self.label, self.color, self._border)
 
 class node():
     ''' node for a binary tree of rectangles '''
 
-    def __init__(self, id, parent, rectangle, left=None, right=None):
+    def __init__(self, id, parent, rectangle, a=None, b=None):
         self.id = id
 
         self.parent = parent
-        self.left = left
-        self.right = right
+        self.a = a
+        self.b = b
 
         self.rect = rectangle
+        self.rect.label = id
 
     def __repr__(self):
         if self.parent is None:
@@ -116,62 +174,132 @@ class node():
         else:
             parent = self.parent.id
 
-        if self.left is None:
-            left = None
+        if self.a is None:
+            a = None
         else:
-            left = self.left.id
+            a = self.a.id
 
-        if self.right is None:
-            right = None
+        if self.b is None:
+            b = None
         else:
-            right = self.right.id
+            b = self.b.id
 
-        return "{} - p: ({}) l: ({}) r: ({}) rect: {}".format(self.id, parent, left, right, self.rect)
+        return "{} - p: ({}) a: ({}) b: ({}) rect: {}".format(self.id, parent, a, b, self.rect)
 
 class tree():
     ''' a binary tree of rectangles '''
 
-    def __init__(self, id, rectangle):
-        self.root = node(id, None, rectangle) 
+    def __init__(self, rectangle):
+        self.root = node(0, None, rectangle) 
+        self.max_id = 0
 
-    def insert(self, id, rectangle):
-        cur = self.root
-
-        while True:
-            parent = cur
-            if id < cur.id:
-                cur = cur.left
-                if cur is None:
-                    cur = node(id, parent, rectangle)
-                    cur.parent.left = cur
-                    return
-            elif id > cur.id:
-                cur = cur.right
-                if cur is None:
-                    cur = node(id, parent, rectangle)
-                    cur.parent.right = cur
-                    return
-            else:
-                print("Something broke. Maybe a duplicate value. Those aren't supported yet, though apparently that would be trivial.")
+    def get(self, id):
+        def walk(cur, id):
+            if cur is None:
                 return
+            elif cur.id == id:
+                return cur
+
+            found = walk(cur.a, id)
+            if found:
+                return found
+
+            found = walk(cur.b, id)
+            if found:
+                return found
+
+        return walk(self.root, id)
+
+    def split(self, id, direction):
+        cur = self.get(id)
+
+        if cur is None:
+            print("Could not find node {}".format(id))
+            return
+
+        if not ( cur.a is None and cur.b is None ):
+            print("You can only split leaf nodes. This node has children: {}".format(cur))
+            return
+
+        if direction.startswith("v"):
+            rect_a, rect_b = cur.rect.v_split()
+        elif direction.startswith("h"):
+            rect_a, rect_b = cur.rect.h_split()
+        else:
+            print("Something went wrong. Direction has to start with 'v' or 'h' but is {}".format(direction))
+            return
+
+        cur.a = node(self.max_id + 1, cur, rect_a)
+        self.max_id += 1
+        cur.b = node(self.max_id + 1, cur, rect_b)
+        self.max_id += 1
+
+    def show(self):
+        img = Image.new("RGBA", (500, 500), "black")
+
+        draw = ImageDraw.Draw(img)
+
+        self.add_to_draw(draw)
+
+        img.show()
+
+    def add_to_draw(self, draw):
+        def draw_all(cur, draw):
+        #TODO Do I need to keep passing 'draw' or can I ghetto
+        # it up with scope
+            if cur is None:
+                return
+            else:
+                cur.rect.add_to_draw(draw)
+                draw_all(cur.a, draw)
+                draw_all(cur.b, draw)
+
+        draw_all(self.root, draw)
 
     def aslist(self):
+    # This only shows the id, not the rectangles
         def walk(node):
             if node is None:
                 return []
             else:
-                return [node.id] + walk(node.left) + walk(node.right)
+                return [node.id] + walk(node.a) + walk(node.b)
 
         return walk(self.root)
 
     def __repr__(self):
+    # This only shows the id, not the rectangles
+
+    #TODO Why does this spam when I tab-complete in iPython?
+
         #DEBUG - print a blank like to make output OK in iPython
         print("\n") #for ipython
+
         #draw_bst only prints to STDOUT so casting to str in order
         # to satisfy the __repr__ requirement causes it to also
         # print None after the tree
-        return str(draw_bst(self.aslist()))
+        return str(drawtree(self.root))
 
-testree = tree(66, None)
-for i in range(12):
-    testree.insert(randint(1,100), None)
+# TEST CODE #
+
+# laziness
+v = "vertical"
+h = "horizontal"
+
+# xy objects
+ten = xy(10)
+hundred = xy(100)
+two_hundred = hundred * 2
+
+# rectangles
+box = rectangle(ten, two_hundred, label="a box")
+root_box = rectangle(ten, two_hundred)
+
+# something to draw on
+paper=Image.new("RGBA", (500, 500), "black")
+pic=ImageDraw.Draw(paper)
+box.add_to_draw(pic)
+
+# rectangle trees
+boxwood = tree(root_box)
+boxwood.split(0, v)
+boxwood.split(2, v)
