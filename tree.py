@@ -239,7 +239,7 @@ class tree():
 
         return walk(self.root, id)
 
-    def split(self, id, direction):
+    def split(self, id, direction=None):
         cur = self.get(id)
 
         if cur is None:
@@ -249,6 +249,14 @@ class tree():
         if not ( cur.a is None and cur.b is None ):
             print("You can only split leaf nodes. This node has children: {}".format(cur))
             return
+
+        if direction is None:
+            if cur.rect.dims.x > cur.rect.dims.y:
+                direction = "v"
+            elif cur.rect.dims.x < cur.rect.dims.y:
+                direction = "h"
+            else:
+                direction = choice(("v", "h"))
 
         if direction.startswith("v"):
             rect_a, rect_b = cur.rect.v_split()
@@ -345,12 +353,16 @@ boxwood.split(0, v)
 boxwood.split(2, v)
 
 # functions
-def spring(tree, num_splits, start_id=0):
+def springtime(tree, num_splits, start_id=0, squarish=False):
     split_types = ["vert", "horiz"]
     leaves = tree.leaves(start_id)
 
     for _ in range(num_splits):
         split_id = leaves.pop()
-        split_type = choice(split_types)
+
+        if squarish:
+            split_type = None
+        else:
+            split_type = choice(split_types)
 
         leaves.update(tree.split(split_id, split_type))
