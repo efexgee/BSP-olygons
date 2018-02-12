@@ -299,6 +299,7 @@ class tree():
         img.show()
 
     def add_to_draw(self, draw):
+    #TODO only draw the leaves
         def draw_all(cur, draw):
         #TODO don't pass draw every time
             if cur is None:
@@ -336,11 +337,12 @@ fifty = xy(50)
 hundred = xy(100)
 two_hundred = hundred * 2
 five_hundred = hundred * 5
+eight_hundred = hundred * 8
 thousand = xy(1000)
 
 # rectangles
-box = rectangle(ten, two_hundred, label="a box")
-root_box = rectangle(zero, five_hundred)
+box = rectangle(zero, eight_hundred)
+root_box = rectangle(zero, eight_hundred)
 
 # something to draw on
 paper=Image.new("RGBA", (500, 500), "black")
