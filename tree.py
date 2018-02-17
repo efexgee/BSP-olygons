@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 
-#TODO camelcase for class names
-
 from PIL import Image, ImageDraw
 from random import choice, randint
 from drawtree import drawtree
 
-COLORS=("red", "green", "blue", "cyan", "magenta", "yellow") 
+COLORS=("red", "green", "blue", "cyan", "magenta", "yellow")
 
-class xy():
+class XY():
     ''' a pair of x and y values which represent either a
         coordinate or a lengths in the x and y axes, which
         supports addition and subtraction '''
 
-    #TODO try to implement iterator to be used as a tuple
+    #TODO try to implement iterator so XY can be used as a tuple
 
     def __init__(self, x, y=None):
         #TODO Can I check for "isindexable"?
@@ -55,28 +53,28 @@ class xy():
         self._y = value
 
     def __add__(self, value):
-        if isinstance(value, xy):
-            return xy(self.x + value.x, self.y + value.y)
+        if isinstance(value, XY):
+            return XY(self.x + value.x, self.y + value.y)
         elif isinstance(value, int):
-            return xy(self.x + value, self.y + value)
+            return XY(self.x + value, self.y + value)
 
     def __sub__(self, value):
-        if isinstance(value, xy):
-            return xy(self.x - value.x, self.y - value.y)
+        if isinstance(value, XY):
+            return XY(self.x - value.x, self.y - value.y)
         elif isinstance(value, int):
-            return xy(self.x - value, self.y - value)
+            return XY(self.x - value, self.y - value)
 
     def __mul__(self, value):
-        if isinstance(value, xy):
-            return xy(self.x * value.x, self.y * value.y)
+        if isinstance(value, XY):
+            return XY(self.x * value.x, self.y * value.y)
         elif isinstance(value, int):
-            return xy(self.x * value, self.y * value)
+            return XY(self.x * value, self.y * value)
 
     def __floordiv__(self, value):
-        if isinstance(value, xy):
-            return xy(self.x // value.x, self.y // value.y)
+        if isinstance(value, XY):
+            return XY(self.x // value.x, self.y // value.y)
         elif isinstance(value, int):
-            return xy(self.x // value, self.y // value)
+            return XY(self.x // value, self.y // value)
 
     def __gt__(self, value):
         # Both x and y are greater than value's x and y
@@ -93,23 +91,23 @@ class xy():
     def __repr__(self):
         return "({},{})".format(self.x, self.y)
 
-class rectangle():
+class Rectangle():
     _DEFAULT_COLOR = "white"
     _DEFAULT_BORDER = "magenta"
     _DEFAULT_TEXT = "black"
 
     def __init__(self, origin, dimensions, label=None, color=None, border=True):
-        ''' origin: coodinates of upper left pixel (xy object or tuple)
-            dimensions: width and height (xy object or tuple) '''
+        ''' origin: coodinates of upper left pixel (XY object or tuple)
+            dimensions: width and height (XY object or tuple) '''
 
         #TODO check for blank args
         if isinstance(origin, tuple):
-            self.orig = xy(origin[0], origin[1])
+            self.orig = XY(origin[0], origin[1])
         else:
             self.orig = origin
 
         if isinstance(dimensions, tuple):
-            self.dims = xy(dimensions[0], dimensions[1])
+            self.dims = XY(dimensions[0], dimensions[1])
         else:
             self.dims = dimensions
 
@@ -118,27 +116,27 @@ class rectangle():
         if color:
             self.color = color
         else:
-            self.color = rectangle._DEFAULT_COLOR
+            self.color = Rectangle._DEFAULT_COLOR
 
         self._border = border
         if border:
-            self._border_color = rectangle._DEFAULT_BORDER
+            self._border_color = Rectangle._DEFAULT_BORDER
         else:
             self._border_color = self.color
 
     def v_split(self):
-        half_size = self.dims // xy(2,1)
+        half_size = self.dims // XY(2,1)
 
-        left = rectangle(self.orig, half_size)
-        right = rectangle(self.orig + xy(half_size.x, 0), half_size)
+        left = Rectangle(self.orig, half_size)
+        right = Rectangle(self.orig + XY(half_size.x, 0), half_size)
 
         return left, right
 
     def h_split(self):
-        half_size = self.dims // xy(1,2)
+        half_size = self.dims // XY(1,2)
 
-        top = rectangle(self.orig, half_size)
-        bottom = rectangle(self.orig + xy(0, half_size.y), half_size)
+        top = Rectangle(self.orig, half_size)
+        bottom = Rectangle(self.orig + XY(0, half_size.y), half_size)
 
         return top, bottom
 
@@ -146,7 +144,7 @@ class rectangle():
         self._border = setting
 
     def show(self):
-        #TODO Does having to add 1 indicate a problem?
+        #TODO Does having to add 1 indicate a problem? are borders frames?
 
         img_size = self.orig + self.dims + 1
 
@@ -173,19 +171,19 @@ class rectangle():
             #ImageDraw needs text to be a string
             label = str(self.label)
 
-            label_size = xy(draw.textsize(label))
+            label_size = XY(draw.textsize(label))
 
             #Only print a label if it fits inside the rectangle
             if label_size < self.dims:
                 label_origin = self.orig + self.dims // 2 - label_size // 2
 
-                draw.text(label_origin.astuple(), label, fill=rectangle._DEFAULT_TEXT)
+                draw.text(label_origin.astuple(), label, fill=Rectangle._DEFAULT_TEXT)
 
     def __repr__(self):
-        return "rectangle({}, {}, {}, {}, {})".format(self.orig, self.dims, self.label, self.color, self._border)
+        return "Rectangle({}, {}, {}, {}, {})".format(self.orig, self.dims, self.label, self.color, self._border)
 
-class node():
-    ''' node for a binary tree of rectangles '''
+class Node():
+    ''' node for a binary tree of Rectangles '''
 
     def __init__(self, id, parent, rectangle, a=None, b=None):
         self.id = id
@@ -216,10 +214,10 @@ class node():
         return "{} - p: ({}) a: ({}) b: ({}) rect: {}".format(self.id, parent, a, b, self.rect)
 
 class tree():
-    ''' a binary tree of rectangles '''
+    ''' a binary tree of Rectangles '''
 
     def __init__(self, rectangle):
-        self.root = node(0, None, rectangle) 
+        self.root = Node(0, None, rectangle)
         self.max_id = 0
 
     def get(self, id):
@@ -243,7 +241,7 @@ class tree():
         cur = self.get(id)
 
         if cur is None:
-            print("Could not find node {}".format(id))
+            print("Could not find Node {}".format(id))
             return
 
         if not ( cur.a is None and cur.b is None ):
@@ -267,10 +265,10 @@ class tree():
             return
 
         new_a_id = self.max_id + 1
-        cur.a = node(new_a_id, cur, rect_a)
+        cur.a = Node(new_a_id, cur, rect_a)
         self.max_id += 1
         new_b_id = self.max_id + 1
-        cur.b = node(new_b_id, cur, rect_b)
+        cur.b = Node(new_b_id, cur, rect_b)
         self.max_id += 1
 
         return new_a_id, new_b_id
@@ -299,22 +297,20 @@ class tree():
         img.show()
 
     def add_to_draw(self, draw):
-    #TODO only draw the leaves
-        def draw_all(cur, draw):
-        #TODO don't pass draw every time
+        def draw_all(cur):
             if cur is None:
                 return
-            else:
+            if not cur.a and not cur.b:
+                #only draw leaf nodes
                 cur.rect.add_to_draw(draw)
-                draw_all(cur.a, draw)
-                draw_all(cur.b, draw)
 
-        draw_all(self.root, draw)
+            draw_all(cur.a)
+            draw_all(cur.b)
+
+        draw_all(self.root)
 
     def __repr__(self):
     # This only shows the id, not the rectangles
-
-    #TODO Why does this spam when I tab-complete in iPython?
 
         #DEBUG - print a blank like to make output OK in iPython
         print("\n") #for ipython
@@ -322,6 +318,7 @@ class tree():
         #draw_bst only prints to STDOUT so casting to str in order
         # to satisfy the __repr__ requirement causes it to also
         # print None after the tree
+        #TODO Have to alter drawtree.py
         return str(drawtree(self.root))
 
 # TEST CODE #
@@ -330,32 +327,32 @@ class tree():
 v = "vertical"
 h = "horizontal"
 
-# xy objects
-zero = xy(0)
-ten = xy(10)
-fifty = xy(50)
-hundred = xy(100)
+# XY objects
+zero = XY(0)
+ten = XY(10)
+fifty = XY(50)
+hundred = XY(100)
 two_hundred = hundred * 2
 five_hundred = hundred * 5
 eight_hundred = hundred * 8
-thousand = xy(1000)
+thousand = XY(1000)
 
-# rectangles
-box = rectangle(zero, eight_hundred)
-root_box = rectangle(zero, eight_hundred)
+# Rectangles
+box = Rectangle(zero, eight_hundred)
+root_box = Rectangle(zero, eight_hundred)
 
 # something to draw on
 paper=Image.new("RGBA", (500, 500), "black")
 pic=ImageDraw.Draw(paper)
 box.add_to_draw(pic)
 
-# rectangle trees
+# Rectangle trees
 boxwood = tree(root_box)
 boxwood.split(0, v)
 boxwood.split(2, v)
 
 # functions
-def springtime(tree, num_splits, start_id=0, squarish=False):
+def sprout(tree, num_splits, start_id=0, squarish=False):
     split_types = ["vert", "horiz"]
     leaves = tree.leaves(start_id)
 
