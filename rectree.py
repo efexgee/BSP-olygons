@@ -76,7 +76,18 @@ class XY():
         elif isinstance(value, int):
             return XY(self.x // value, self.y // value)
 
+    def __eq__(self, value):
+        if self.x == value.x and self.y == value.y:
+            return True
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.astuple())
+
     def __gt__(self, value):
+        #TODO redefine to make orderable
+        #TODO this should be a custom method
         # Both x and y are greater than value's x and y
         # i.e. a rectangle with dimensions 'value' could
         # fit inside a rectangle with our dimensions
@@ -213,7 +224,7 @@ class Node():
 
         return "{} - p: ({}) a: ({}) b: ({}) rect: {}".format(self.id, parent, a, b, self.rect)
 
-class tree():
+class Tree():
     ''' a binary tree of Rectangles '''
 
     def __init__(self, rectangle):
@@ -321,6 +332,106 @@ class tree():
         #TODO Have to alter drawtree.py
         return str(drawtree(self.root))
 
+class Line():
+    # These assume to be vertical or horizontal lines
+    def __init__(self, start, end):
+        #TODO validate that these are XY objects
+        #TODO validate length of > 1
+        #TODO validate it is horizontal or vertical
+        if isinstance(start, tuple):
+            self.start = XY(start)
+        elif isinstance(start, XY):
+            self.start = start
+        else:
+            print("What am I supposed to do with this? {} is type {}".format(start, type(start)))
+
+        if isinstance(self.start, XY):
+            print("yup")
+        else:
+            print("nope")
+
+        if isinstance(end, tuple):
+            self.end = XY(end)
+        else:
+            self.end = end
+
+    def __contains__(self, point):
+        if isinstance(point, XY):
+            print("yup")
+        else:
+            print("nope")
+
+        assert isinstance(point, XY), "Argument must be an XY object: {} is type {}".format(point, type(point))
+
+        if self.orientation() == "vertical" and self.start.x == point.x:
+            if min(self.start.y, self.end.y) <= point.y <= max(self.start.y, self.end.y):
+                return True
+        elif self.orientation() == "horizontal" and self.start.y == point.y:
+            if min(self.start.x, self.end.x) <= point.x <= max(self.start.x, self.end.x):
+                return True
+        else:
+            return False
+
+    def orientation(self):
+        if self.start.x == self.end.x:
+            return "vertical"
+        elif self.start.y == self.end.y:
+            return "horizontal"
+        else:
+            print("This line is diagonal: {}".format(self))
+
+    def __eq__(self, line):
+        pass
+
+    def __len__(self):
+        pass
+
+    def difference(self, line):
+        # in this, but not other
+        pass
+
+    def intersection(self, line):
+        # in both
+        pass
+
+    def isdisjoint(self, line):
+        # null intersection
+        pass
+
+    def issubset(self, line):
+        # other contains this
+        pass
+
+    def symmetric_difference(self, line):
+        # in this XOR other
+        pass
+
+    def union(self, line):
+        # in this OR other
+        pass
+
+    def iscontiguous(self, line):
+        orientation = self.orientation
+
+        if not orientation() == line.orientation:
+            return False
+
+        if not (line.start in self or line.end in self):
+            return False
+
+        return True
+
+    def shares_vertex(self, line):
+        # this does not check for "touching" because that would include
+        # adjacent vertices
+        if {self.start, self.end}.intersection({line.start, line.end}):
+            return True
+        else:
+            return False
+
+    def __repr__(self):
+        return str((self.start, self.end))
+
 # TEST CODE #
 
 # laziness
@@ -347,7 +458,7 @@ pic=ImageDraw.Draw(paper)
 box.add_to_draw(pic)
 
 # Rectangle trees
-boxwood = tree(root_box)
+boxwood = Tree(root_box)
 boxwood.split(0, v)
 boxwood.split(2, v)
 
