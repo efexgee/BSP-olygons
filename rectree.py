@@ -82,19 +82,33 @@ class XY():
         else:
             return False
 
+    def fitsin(self, value):
+        #TODO rename 'value' on all these
+        #TODO should this be cancontain instead?
+        # Both x and y are greater than value's x and y
+        # i.e. a rectangle with dimensions 'value' could
+        # fit inside a rectangle with our dimensions
+        if self.x < value.x and self.y < value.y:
+            return True
+        else:
+            return False
+
     def __hash__(self):
         return hash(self.astuple())
 
     def __gt__(self, value):
-        #TODO redefine to make orderable
-        #TODO this should be a custom method
-        # Both x and y are greater than value's x and y
-        # i.e. a rectangle with dimensions 'value' could
-        # fit inside a rectangle with our dimensions
-        if self.x > value.x and self.y > value.y:
-            return True
+        # compare the non-shares dimension
+        # A > B if A and B are on the same vertical or horizontal
+        # line and A is further from the origin than B
+        if self.x == value.x:
+            return self.y > value.y
+        elif self.y == value.y:
+            return self.x > value.x
         else:
-            return False
+            print("XY objects don't share an axis: {} and {}".format(self, value))
+
+    def __ge__(self, value):
+        return self > value or self == value
 
     def astuple(self):
         return (self.x, self.y)
@@ -185,7 +199,7 @@ class Rectangle():
             label_size = XY(draw.textsize(label))
 
             #Only print a label if it fits inside the rectangle
-            if label_size < self.dims:
+            if label_size.fitsin(self.dims):
                 label_origin = self.orig + self.dims // 2 - label_size // 2
 
                 draw.text(label_origin.astuple(), label, fill=Rectangle._DEFAULT_TEXT)
@@ -338,6 +352,7 @@ class Line():
         #TODO validate that these are XY objects
         #TODO validate length of > 1
         #TODO validate it is horizontal or vertical
+        #TODO sort at init time
         if isinstance(start, tuple):
             self.start = XY(start)
         elif isinstance(start, XY):
@@ -345,22 +360,14 @@ class Line():
         else:
             print("What am I supposed to do with this? {} is type {}".format(start, type(start)))
 
-        if isinstance(self.start, XY):
-            print("yup")
-        else:
-            print("nope")
-
         if isinstance(end, tuple):
             self.end = XY(end)
-        else:
+        elif isinstance(end, XY):
             self.end = end
+        else:
+            print("What am I supposed to do with this? {} is type {}".format(start, type(start)))
 
     def __contains__(self, point):
-        if isinstance(point, XY):
-            print("yup")
-        else:
-            print("nope")
-
         assert isinstance(point, XY), "Argument must be an XY object: {} is type {}".format(point, type(point))
 
         if self.orientation() == "vertical" and self.start.x == point.x:
@@ -381,10 +388,7 @@ class Line():
             print("This line is diagonal: {}".format(self))
 
     def __eq__(self, line):
-        pass
-
-    def __len__(self):
-        pass
+        return not {self.start, self.end}.symmetric_difference({line.start, line.end})
 
     def difference(self, line):
         # in this, but not other
@@ -408,26 +412,31 @@ class Line():
 
     def union(self, line):
         # in this OR other
-        pass
+        if not self.iscontiguous(line):
+            #TODO maybe this would be a good place to catch exceptions
+            print("Can't union non-contiguous lines: {} and {}".format(self, line))
+
+        return Line(min(self.start, self.end, line.start, line.end), max(self.start, self.end, line.start, line.end))
 
     def iscontiguous(self, line):
+        #TODO this is not symmetrical!?
         orientation = self.orientation
 
-        if not orientation() == line.orientation:
+        if not orientation() == line.orientation():
+            print("diff orientations")
             return False
 
         if not (line.start in self or line.end in self):
+            print("arg vertices not on line")
             return False
 
         return True
 
     def shares_vertex(self, line):
+        #TODO probably won't be used
         # this does not check for "touching" because that would include
         # adjacent vertices
-        if {self.start, self.end}.intersection({line.start, line.end}):
-            return True
-        else:
-            return False
+        return bool({self.start, self.end}.intersection({line.start, line.end}))
 
     def __repr__(self):
         return str((self.start, self.end))
@@ -462,6 +471,16 @@ boxwood = Tree(root_box)
 boxwood.split(0, v)
 boxwood.split(2, v)
 
+# Lines
+la = Line(ten, (10,50))
+lb = Line((10,50), fifty)
+lc = Line(hundred, (10,100))
+ld = Line((75,100), (20,100))
+le = Line(fifty, (50,75))
+lf = Line((80,100), (120,100))
+
+lines = (la, lb, lc, ld, le, lf)
+
 # functions
 def sprout(tree, num_splits, start_id=0, squarish=False):
     split_types = ["vert", "horiz"]
@@ -476,3 +495,19 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
             split_type = choice(split_types)
 
         leaves.update(tree.split(split_id, split_type))
+
+def splice(line_a, line_b):
+    # this assertion is redundant with iscontiguous
+    assert line_a.orientation() == line_b.orientation(), "Lines are different orientations: {} and {}".format(line_a, line_b)
+
+    assert line_a.iscontiguous(line_b), "Lines are not contiguous: {} and {}".format(line_a, line_b)
+
+    last_vertex = None
+    new_lines = []
+
+    for vertex in sorted([line_a.start, line_a.end, line_b.start, line_b.end]):
+        if last_vertex:
+            new_lines += [Line(last_vertex, vertex)]
+        last_vertex = vertex
+
+    return new_lines
