@@ -143,6 +143,7 @@ class Rectangle():
         else:
             self.color = Rectangle._DEFAULT_COLOR
 
+        #TODO Why is this private? just because setter?
         self._border = border
         if border:
             self._border_color = Rectangle._DEFAULT_BORDER
@@ -152,21 +153,37 @@ class Rectangle():
     def v_split(self):
         half_size = self.dims // XY(2,1)
 
-        left = Rectangle(self.orig, half_size)
-        right = Rectangle(self.orig + XY(half_size.x, 0), half_size)
+        left = Rectangle(self.orig, half_size, color=self.color, border=self._border)
+        right = Rectangle(self.orig + XY(half_size.x, 0), half_size, color=self.color, border=self._border)
 
         return left, right
 
     def h_split(self):
         half_size = self.dims // XY(1,2)
 
-        top = Rectangle(self.orig, half_size)
-        bottom = Rectangle(self.orig + XY(0, half_size.y), half_size)
+        top = Rectangle(self.orig, half_size, color=self.color, border=self._border)
+        bottom = Rectangle(self.orig + XY(0, half_size.y), half_size, color=self.color, border=self._border)
 
         return top, bottom
 
     def set_border(self, setting):
         self._border = setting
+
+    def get_edges(self):
+        #TODO make part of structure and update on the fly?
+        upper_right = self.orig + XY(self.dims.x, 0)
+        lower_right = self.orig + self.dims
+        #TODO making a new XY much better than (0,1) mult shenanigans, right?
+        lower_left = self.orig + XY(0, self.dims.y)
+
+        edges = {}
+
+        edges["north"] = Line(self.orig, upper_right)
+        edges["east"] = Line(upper_right, lower_right)
+        edges["south"] = Line(lower_left, lower_right)
+        edges["west"] = Line(self.orig, lower_left)
+
+        return edges
 
     def show(self):
         #TODO Does having to add 1 indicate a problem? are borders frames?
@@ -220,6 +237,9 @@ class Node():
         self.rect = rectangle
         self.rect.label = id
 
+        #TODO should this be a set? would need Line.__hash__
+        self.segments = list(rectangle.get_edges().values())
+
     def __repr__(self):
         if self.parent is None:
             parent = None
@@ -236,14 +256,17 @@ class Node():
         else:
             b = self.b.id
 
-        return "{} - p: ({}) a: ({}) b: ({}) rect: {}".format(self.id, parent, a, b, self.rect)
+        return "{} - p: ({}) a: ({}) b: ({}) rect: {} segments: {}".format(self.id, parent, a, b, self.rect, self.segments)
 
 class Tree():
     ''' a binary tree of Rectangles '''
 
     def __init__(self, rectangle):
         self.root = Node(0, None, rectangle)
+        # the highest ID currently in the tree
         self.max_id = 0
+
+        self.canvas = rectangle.dims
 
     def get(self, id):
         def walk(cur, id):
@@ -296,6 +319,12 @@ class Tree():
         cur.b = Node(new_b_id, cur, rect_b)
         self.max_id += 1
 
+        #delete the rectangle from the parent node
+        #if merging becomes a thing, this might not be smart
+
+        cur.rect = None
+        cur.segments = None
+
         return new_a_id, new_b_id
 
     def leaves(self, start_id=0):
@@ -309,9 +338,8 @@ class Tree():
         #return set(walk(self.root))
         return set(walk(self.get(start_id)))
 
-
     def show(self):
-        img_size = self.root.rect.orig + self.root.rect.dims + 1
+        img_size = self.canvas + 1
 
         img = Image.new("RGBA", img_size.astuple(), "black")
 
@@ -439,7 +467,16 @@ class Line():
         return bool({self.start, self.end}.intersection({line.start, line.end}))
 
     def __repr__(self):
-        return str((self.start, self.end))
+        #return str((self.start, self.end))
+        #DEBUG for readability
+        return "{}-{}".format(self.start, self.end)
+
+class Segment():
+    #TODO I feel like I'm making too many classes
+
+    def __init__(self, line, node):
+        self.line = line
+        self.node = node
 
 # TEST CODE #
 
@@ -497,7 +534,7 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
         leaves.update(tree.split(split_id, split_type))
 
 def splice(line_a, line_b):
-    # this assertion is redundant with iscontiguous
+    # this assertion is redundant with iscontiguous below
     assert line_a.orientation() == line_b.orientation(), "Lines are different orientations: {} and {}".format(line_a, line_b)
 
     assert line_a.iscontiguous(line_b), "Lines are not contiguous: {} and {}".format(line_a, line_b)
