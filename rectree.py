@@ -176,14 +176,13 @@ class Rectangle():
         #TODO making a new XY much better than (0,1) mult shenanigans, right?
         lower_left = self.orig + XY(0, self.dims.y)
 
-        edges = {}
 
-        edges["north"] = Line(self.orig, upper_right)
-        edges["east"] = Line(upper_right, lower_right)
-        edges["south"] = Line(lower_left, lower_right)
-        edges["west"] = Line(self.orig, lower_left)
+        north = Line(self.orig, upper_right)
+        east = Line(upper_right, lower_right)
+        south = Line(lower_left, lower_right)
+        west = Line(self.orig, lower_left)
 
-        return edges
+        return north, east, south, west
 
     def show(self):
         #TODO Does having to add 1 indicate a problem? are borders frames?
@@ -237,8 +236,8 @@ class Node():
         self.rect = rectangle
         self.rect.label = id
 
-        #TODO should this be a set? would need Line.__hash__
-        self.segments = list(rectangle.get_edges().values())
+    def centroid(self):
+        return self.rect.orig + self.rect.dims // 2
 
     def __repr__(self):
         if self.parent is None:
@@ -256,7 +255,7 @@ class Node():
         else:
             b = self.b.id
 
-        return "{} - p: ({}) a: ({}) b: ({}) rect: {} segments: {}".format(self.id, parent, a, b, self.rect, self.segments)
+        return "{} - p: ({}) a: ({}) b: ({}) rect: {}".format(self.id, parent, a, b, self.rect)
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -265,6 +264,10 @@ class Tree():
         self.root = Node(0, None, rectangle)
         # the highest ID currently in the tree
         self.max_id = 0
+
+        self.segments = {}
+        for line in self.root.rect.get_edges():
+            self.segments[line] = [self.root]
 
         self.canvas = rectangle.dims
 
@@ -312,18 +315,35 @@ class Tree():
             print("Something went wrong. Direction has to start with 'v' or 'h' but is {}".format(direction))
             return
 
-        new_a_id = self.max_id + 1
+        #TODO should there be an add_node method?
+        self.max_id += 1
+        new_a_id = self.max_id
         cur.a = Node(new_a_id, cur, rect_a)
+        for line in cur.a.rect.get_edges():
+            #TODO seems awkward but would "defaults" help?
+            if line in self.segments:
+                self.segments[line] += [cur.a]
+            else:
+                self.segments[line] = [cur.a]
+
         self.max_id += 1
-        new_b_id = self.max_id + 1
+        new_b_id = self.max_id
         cur.b = Node(new_b_id, cur, rect_b)
-        self.max_id += 1
+        for line in cur.b.rect.get_edges():
+            #TODO seems awkward but would "defaults" help?
+            if line in self.segments:
+                self.segments[line] += [cur.b]
+            else:
+                self.segments[line] = [cur.b]
+
+        for line in cur.rect.get_edges():
+            self.segments[line].remove(cur)
+            if self.segments[line] == []:
+                del self.segments[line]
 
         #delete the rectangle from the parent node
         #if merging becomes a thing, this might not be smart
-
         cur.rect = None
-        cur.segments = None
 
         return new_a_id, new_b_id
 
@@ -346,6 +366,17 @@ class Tree():
         draw = ImageDraw.Draw(img)
 
         self.add_to_draw(draw)
+
+        for segment in self.segments:
+            assert len(self.segments[segment]) == 1 or len(self.segments[segment]) == 2, "Segment has an impossible number of associated rectangles: {}".format(len(self.segments[segment]))
+
+            if len(self.segments[segment]) == 2:
+                draw.line(segment.astuples(), fill="lightgreen", width=3)
+                centroid_a = self.segments[segment][0].centroid()
+                centroid_b = self.segments[segment][1].centroid()
+                draw.line((centroid_a.astuple(), centroid_b.astuple()), fill="black")
+
+        #draw.line([(10,10), (100,100)], fill="black", width=1)
 
         img.show()
 
@@ -466,6 +497,14 @@ class Line():
         # adjacent vertices
         return bool({self.start, self.end}.intersection({line.start, line.end}))
 
+    def astuples(self):
+        return (self.start.astuple(), self.end.astuple())
+
+    def __hash__(self):
+        #TODO I don't see how hashing an equivalent data structure is any
+        # safer than hashing the __repr__
+        return hash(str(self))
+
     def __repr__(self):
         #return str((self.start, self.end))
         #DEBUG for readability
@@ -477,6 +516,10 @@ class Segment():
     def __init__(self, line, node):
         self.line = line
         self.node = node
+
+    def __repr__(self):
+        #TODO is this string cast the right way to do this?
+        return str(self.line)
 
 # TEST CODE #
 
