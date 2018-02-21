@@ -238,7 +238,10 @@ class Node():
         self.rect.label = id
 
         #TODO should this be a set? would need Line.__hash__
-        self.segments = list(rectangle.get_edges().values())
+        self.segments = [Segment(line, self) for line in rectangle.get_edges().values()]
+        #the Tree needs to have a record of all segments, so we
+        #have to do that after any node changes
+        #TODO better way to do this?
 
     def __repr__(self):
         if self.parent is None:
@@ -265,7 +268,7 @@ class Tree():
         self.root = Node(0, None, rectangle)
         # the highest ID currently in the tree
         self.max_id = 0
-
+        self.segments = self.root.segments.copy()
         self.canvas = rectangle.dims
 
     def get(self, id):
@@ -314,15 +317,30 @@ class Tree():
 
         new_a_id = self.max_id + 1
         cur.a = Node(new_a_id, cur, rect_a)
+        self.segments += cur.a.segments
         self.max_id += 1
         new_b_id = self.max_id + 1
         cur.b = Node(new_b_id, cur, rect_b)
+        self.segments += cur.b.segments
         self.max_id += 1
 
         #delete the rectangle from the parent node
         #if merging becomes a thing, this might not be smart
-
         cur.rect = None
+
+        #delete the segments associated with this node from the
+        # Tree's segments
+        while cur.segments:
+            #print("cur.segments: {}".format(cur.segments))
+            #print("self.segments: {}".format(self.segments))
+            segment = cur.segments.pop()
+            #print("Removing segment {}".format(segment))
+            self.segments.remove(segment)
+            #print("cur.segments: {}".format(len(cur.segments)))
+            #print("self.segments: {}".format(len(self.segments)))
+            #print("")
+
+        #for good measure :\
         cur.segments = None
 
         return new_a_id, new_b_id
@@ -477,6 +495,10 @@ class Segment():
     def __init__(self, line, node):
         self.line = line
         self.node = node
+
+    def __repr__(self):
+        #TODO is this string cast the right way to do this?
+        return str(self.line)
 
 # TEST CODE #
 
