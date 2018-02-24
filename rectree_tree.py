@@ -2,6 +2,7 @@
 
 from rectree_node import *
 from line import *
+from PIL import Image, ImageDraw
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -35,41 +36,46 @@ class Tree():
         return walk(self.root, id)
 
     def add_segment(self, line, node):
-        print("Been asked to add line {}".format(line))
+        print("> Adding line {}".format(line))
 
         def smush(line_a, node_a, line_b):
-            print("Smushing {} and {}".format(line_a, line_b))
+            print(">> Smushing {} ({}) and {}".format(line_a, node_a, line_b))
             # We can assume that there is only a single rectangle
             # associated with this line
-            assert len(self.segments[line_b]) == 1, "Line {} doesn't have exactly 1 associated rectangle: {} values={}".format(line_b, len(self.segments[line_b]), self.segments[line_b])
+            #assert len(self.segments[line_b]) == 1, "Line {} doesn't have exactly 1 associated rectangle: {} ({})".format(line_b, len(self.segments[line_b]), self.segments[line_b])
 
+            #figure out which node is attached to line_b
+            #TODO am I doing the index just to "cast" the list of nodes into
+            # a single node?! cause that's super gross
             node_b = self.segments[line_b][0]
+
             last_vertex = None
-            new_segments = set()
+            new_segments = {}
 
             # remove duplicates so we don't get 0-length lines
             for vertex in sorted(set([line_a.start, line_a.end, line_b.start, line_b.end])):
                 if last_vertex:
                     new_line = Line(last_vertex, vertex)
-                    #print("Generated new line: {}".format(new_line))
+                    new_segments[new_line] = []
+                    print("Generated new line: {}".format(new_line))
                     if new_line.issubset(line_a):
-                        #print("New segment: line {} node {}".format(new_line, node_a))
-                        new_segments.add((new_line, node_a))
+                        print("New segment: line {} node {}".format(new_line, node_a))
+                        #TODO use append or += ?
+                        new_segments[new_line].append(node_a)
                     if new_line.issubset(line_b):
-                        #print("New segment: line {} node {}".format(new_line, node_b))
-                        new_segments.add((new_line, node_b))
+                        print("New segment: line {} node {}".format(new_line, node_b))
+                        new_segments[new_line].append(node_b)
                 last_vertex = vertex
 
-            #TODO new_segments needs to be de-duped!
+            print("Deleting segment {}".format(line_b))
+            del self.segments[line_b]
 
-            #del self.segments[line_b]
-
-            #print("Returning new segment(s): {}".format(new_segments))
+            print("Returning new segment(s): {}".format(new_segments))
             return new_segments
 
         if line in self.segments:
             self.segments[line] += [node]
-            print("Added node {} to segment {}".format(node, line))
+            print("Simple add of node {} to segment {}".format(node, line))
             return
 
         #print("Dealing with complicated addition of {}".format(line))
@@ -79,22 +85,29 @@ class Tree():
         # check for overlapping segments
         #TODO should this sort of thing be a comprehension?
         for entry in self.segments:
-            #print("Checking entry {} for contiguity".format(entry))
+            #print("Checking entry {} for overlap".format(entry))
             if line.overlaps(entry):
-                print("Found overlapping segment {}".format(entry))
+                print("{} overlaps with {}".format(line, entry))
                 overlapping_segments += [entry]
 
         if overlapping_segments:
             while overlapping_segments:
+                print("line = {}".format(line))
                 new_segments = smush(line, node, overlapping_segments.pop())
+                print("line = {}".format(line))
                 print("Inserting new segments: {}".format(new_segments))
-                for line, node in new_segments:
-                    if line in self.segments:
-                        print("Added node {} to segment {}".format(node, line))
-                        self.segments[line] += [node]
+                for new_line in new_segments:
+                    if new_line in self.segments:
+                        print("Found line {} in self.segments: {}".format(new_line, self.segments[new_line]))
+                        print("self.segments: {}".format(self.segments))
+                        # I don't think it's possible for smush to return a segment
+                        # attached to two nodes which already exists
+                        assert len(new_segments[new_line]) == 1, "inserting new line with {} attached nodes".format(len(new_segments[new_line]))
+                        print("Added node {} to segment {}".format(node, new_line))
+                        self.segments[new_line] += [node]
                     else:
-                        print("Created segment {} with node {}".format(line, node))
-                        self.segments[line] = [node]
+                        print("Created segment {} with node {}".format(new_line, node))
+                        self.segments[new_line] = new_segments[new_line]
             return
 
         self.segments[line] = [node]
@@ -133,10 +146,10 @@ class Tree():
         # remove the split node's segments from the Tree
         print("Cleaning up edges of {}".format(cur))
         for line in cur.rect.get_edges():
-            #print("Removing {} from {}".format(cur, self.segments[line]))
+            print("Removing {} from {}".format(cur, self.segments[line]))
             self.segments[line].remove(cur)
             if self.segments[line] == []:
-                #print("Deleting empty segment {}".format(line))
+                print("Deleting empty segment {}".format(line))
                 del self.segments[line]
 
         #TODO should there be an add_node method?

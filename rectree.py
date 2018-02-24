@@ -28,6 +28,7 @@ thousand = XY(1000)
 # Rectangles
 box = Rectangle(zero, eight_hundred)
 root_box = Rectangle(zero, eight_hundred)
+tiny_box = Rectangle(zero, ten)
 
 # something to draw on
 paper=Image.new("RGBA", (500, 500), "black")
@@ -35,7 +36,7 @@ pic=ImageDraw.Draw(paper)
 box.add_to_draw(pic)
 
 # Rectangle trees
-boxwood = Tree(root_box)
+boxwood = Tree(tiny_box)
 boxwood.split(0, v)
 boxwood.split(2, v)
 
@@ -67,4 +68,4 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
 
 sprout(boxwood, 5)
 
-boxwood.show()
+#boxwood.show()
