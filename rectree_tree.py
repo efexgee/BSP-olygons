@@ -36,7 +36,7 @@ class Tree():
         return walk(self.root, id)
 
     def add_segment(self, line, node):
-        print("> Adding line {}".format(line))
+        #print("> Adding line {}".format(line))
 
         def smush(line_a, node_a, line_b):
             print(">> Smushing {} ({}) and {}".format(line_a, node_a, line_b))
@@ -57,67 +57,63 @@ class Tree():
                 if last_vertex:
                     new_line = Line(last_vertex, vertex)
                     new_segments[new_line] = []
-                    print("Generated new line: {}".format(new_line))
+                    print("Generated new segment candidate: {}".format(new_line))
                     if new_line.issubset(line_a):
-                        print("New segment: line {} node {}".format(new_line, node_a))
+                        print("Added {} to new segment {}".format(node_a, new_line))
                         #TODO use append or += ?
                         new_segments[new_line].append(node_a)
                     if new_line.issubset(line_b):
-                        print("New segment: line {} node {}".format(new_line, node_b))
+                        print("Added {} to new segment {}".format(node_b, new_line))
                         new_segments[new_line].append(node_b)
                 last_vertex = vertex
 
-            print("Deleting segment {}".format(line_b))
+            print("Deleting segment {} ({}) from tree's segment registry".format(line_b, self.segments[line_b]))
             del self.segments[line_b]
 
-            print("Returning new segment(s): {}".format(new_segments))
+            #print("Returning new segment(s): {}".format(new_segments))
             return new_segments
 
         if line in self.segments:
+            assert len(self.segments[line]) == 1, "Segment doesn't have exactly 1 node: {}".format(self.segments[line])
             self.segments[line] += [node]
             print("Simple add of node {} to segment {}".format(node, line))
             return
 
         #print("Dealing with complicated addition of {}".format(line))
 
-        overlapping_segments = []
-        
         # check for overlapping segments
-        #TODO should this sort of thing be a comprehension?
+        found_overlap = False
         for entry in self.segments:
             #print("Checking entry {} for overlap".format(entry))
             if line.overlaps(entry):
+                found_overlap = True
                 print("{} overlaps with {}".format(line, entry))
-                overlapping_segments += [entry]
-
-        if overlapping_segments:
-            while overlapping_segments:
-                print("line = {}".format(line))
-                new_segments = smush(line, node, overlapping_segments.pop())
-                print("line = {}".format(line))
+                new_segments = smush(line, node, entry)
                 print("Inserting new segments: {}".format(new_segments))
                 for new_line in new_segments:
+                    new_nodes = new_segments[new_line]
                     if new_line in self.segments:
                         print("Found line {} in self.segments: {}".format(new_line, self.segments[new_line]))
-                        print("self.segments: {}".format(self.segments))
+                        #print("self.segments: {}".format(self.segments))
                         # I don't think it's possible for smush to return a segment
                         # attached to two nodes which already exists
                         assert len(new_segments[new_line]) == 1, "inserting new line with {} attached nodes".format(len(new_segments[new_line]))
-                        print("Added node {} to segment {}".format(node, new_line))
-                        self.segments[new_line] += [node]
+                        self.segments[new_line] += new_nodes
+                        print("Smush added node {} to segment {}. Now has nodes {}".format(new_nodes, new_line, self.segments[new_line]))
                     else:
-                        print("Created segment {} with node {}".format(new_line, node))
-                        self.segments[new_line] = new_segments[new_line]
+                        self.segments[new_line] = new_nodes
+                        print("Smush created segment {} with node(s) {}".format(new_line, new_nodes))
+        if found_overlap:
             return
 
         self.segments[line] = [node]
-        print("Added segment {} with {}".format(line, node))
+        print("Simple create of segment {} with {}".format(line, node))
         return
     
     def split(self, id, direction=None):
         cur = self.get(id)
 
-        print("=== Splitting {}".format(cur))
+        print("=== Splitting {} (probably into Node {} and Node {})".format(cur, self.max_id + 1, self.max_id + 2))
 
         if cur is None:
             print("Could not find Node {}".format(id))
@@ -146,7 +142,7 @@ class Tree():
         # remove the split node's segments from the Tree
         print("Cleaning up edges of {}".format(cur))
         for line in cur.rect.get_edges():
-            print("Removing {} from {}".format(cur, self.segments[line]))
+            print("Removing {} from {} ({})".format(cur, line, self.segments[line]))
             self.segments[line].remove(cur)
             if self.segments[line] == []:
                 print("Deleting empty segment {}".format(line))
@@ -192,7 +188,7 @@ class Tree():
         self.add_to_draw(draw)
 
         for segment in self.segments:
-            assert len(self.segments[segment]) == 1 or len(self.segments[segment]) == 2, "Segment has an impossible number of associated rectangles: {}".format(len(self.segments[segment]))
+            assert len(self.segments[segment]) == 1 or len(self.segments[segment]) == 2, "Segment {} has an impossible number of associated nodes: {} ({})".format(segment, len(self.segments[segment]), self.segments[segment])
 
             if len(self.segments[segment]) == 2:
                 draw.line(segment.astuples(), fill="lightgreen", width=3)
