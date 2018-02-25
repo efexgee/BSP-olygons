@@ -65,6 +65,6 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
         leaves.update(tree.split(split_id, split_type))
 
 
-sprout(boxwood, 5)
+sprout(boxwood, 2)
 
 boxwood.show()

@@ -1,8 +1,20 @@
 #!/usr/bin/env python
 
+#TODO how to pep8?
+
 from rectree_node import *
 from line import *
 from PIL import Image, ImageDraw
+
+class Edge():
+    ''' a Line and up to 2 Nodes'''
+    def __init__(self, line, nodes):
+        assert len(nodes) <= 2, "Too many nodes: {}".format(nodes)
+        self.line = line
+        self.nodes = nodes
+
+    def __repr__(self):
+        return "{}: {}".format(self.line, self.nodes)
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -35,19 +47,14 @@ class Tree():
 
         return walk(self.root, id)
 
-    def add_segment(self, line, node):
-        #print("> Adding line {}".format(line))
+    def add_segment(self, new_line, new_node):
+        print("> Adding line {}".format(new_line))
 
-        def smush(line_a, node_a, line_b):
-            print(">> Smushing {} ({}) and {}".format(line_a, node_a, line_b))
-            # We can assume that there is only a single rectangle
-            # associated with this line
-            #assert len(self.segments[line_b]) == 1, "Line {} doesn't have exactly 1 associated rectangle: {} ({})".format(line_b, len(self.segments[line_b]), self.segments[line_b])
+        def dovetail(line_a, node_a, line_b, node_b):
+            #TODO maybe I should make a segment class?
+            #TODO I don't like using 0 and assuming a single item list
 
-            #figure out which node is attached to line_b
-            #TODO am I doing the index just to "cast" the list of nodes into
-            # a single node?! cause that's super gross
-            node_b = self.segments[line_b][0]
+            print(">> Dovetailing lines {} and {}".format(line_a, line_b))
 
             last_vertex = None
             new_segments = {}
@@ -57,57 +64,62 @@ class Tree():
                 if last_vertex:
                     new_line = Line(last_vertex, vertex)
                     new_segments[new_line] = []
-                    print("Generated new segment candidate: {}".format(new_line))
                     if new_line.issubset(line_a):
-                        print("Added {} to new segment {}".format(node_a, new_line))
                         #TODO use append or += ?
                         new_segments[new_line].append(node_a)
+                        print("Dovetail {:19} + {} ({})".format(str(new_line), node_a, new_segments[new_line]))
                     if new_line.issubset(line_b):
-                        print("Added {} to new segment {}".format(node_b, new_line))
                         new_segments[new_line].append(node_b)
+                        print("Dovetail {:19} + {} ({})".format(str(new_line), node_b, new_segments[new_line]))
                 last_vertex = vertex
-
-            print("Deleting segment {} ({}) from tree's segment registry".format(line_b, self.segments[line_b]))
-            del self.segments[line_b]
 
             #print("Returning new segment(s): {}".format(new_segments))
             return new_segments
 
-        if line in self.segments:
-            assert len(self.segments[line]) == 1, "Segment doesn't have exactly 1 node: {}".format(self.segments[line])
-            self.segments[line] += [node]
-            print("Simple add of node {} to segment {}".format(node, line))
+        if new_line in self.segments:
+            #this exact line is already in the registry
+            #just add this node to that segment
+            #print(self.segments)
+            #print(self.segments[new_line])
+            assert len(self.segments[new_line]) == 1, "Segment doesn't have exactly 1 node: {}".format(self.segments[new_line])
+            self.segments[new_line] += [new_node]
+            print("Segment {:19} + {} ({}) just append a node".format(str(new_line), new_node, self.segments[new_line]))
             return
-
-        #print("Dealing with complicated addition of {}".format(line))
 
         # check for overlapping segments
-        found_overlap = False
-        for entry in self.segments:
-            #print("Checking entry {} for overlap".format(entry))
-            if line.overlaps(entry):
-                found_overlap = True
-                print("{} overlaps with {}".format(line, entry))
-                new_segments = smush(line, node, entry)
-                print("Inserting new segments: {}".format(new_segments))
-                for new_line in new_segments:
-                    new_nodes = new_segments[new_line]
-                    if new_line in self.segments:
-                        print("Found line {} in self.segments: {}".format(new_line, self.segments[new_line]))
-                        #print("self.segments: {}".format(self.segments))
-                        # I don't think it's possible for smush to return a segment
-                        # attached to two nodes which already exists
-                        assert len(new_segments[new_line]) == 1, "inserting new line with {} attached nodes".format(len(new_segments[new_line]))
-                        self.segments[new_line] += new_nodes
-                        print("Smush added node {} to segment {}. Now has nodes {}".format(new_nodes, new_line, self.segments[new_line]))
-                    else:
-                        self.segments[new_line] = new_nodes
-                        print("Smush created segment {} with node(s) {}".format(new_line, new_nodes))
-        if found_overlap:
-            return
+        for existing_line in self.segments:
+            #print("Checking existing_line {} for overlap".format(existing_line))
+            if new_line.overlaps(existing_line):
+                print("{} overlaps with {} ({})".format(new_line, existing_line, self.segments[existing_line]))
+                existing_node = self.segments[existing_line][0]
+                new_segments = dovetail(new_line, new_node, existing_line, existing_node)
 
-        self.segments[line] = [node]
-        print("Simple create of segment {} with {}".format(line, node))
+                #the existing line will be entirely replaced
+                del self.segments[existing_line]
+
+                print("Processing dovetails: {}".format(new_segments))
+                for new_segment_line in new_segments:
+                    print("Processing {}".format(new_segment_line, new_segments[new_segment_line]))
+                    #TODO I think I need a segment class
+                    if existing_node in new_segments[new_segment_line]:
+                        #any segment associated with the old node goes straight into
+                        #the registry
+                        #print(self.segments)
+                        #print(new_segment_line)
+                        assert new_segment_line not in self.segments, "Trying to overwrite {} ({}) with dovetail {} ({})".format(new_segment_line, self.segments[new_segment_line], new_segment_line, existing_node)
+                        self.segments[new_segment_line] = new_segments[new_segment_line]
+                        print("Segment {:19} = {} ({}) add any olds".format(str(new_segment_line), new_segments[new_segment_line], self.segments[new_segment_line]))
+                    else:
+                        self.add_segment(new_segment_line, new_node)
+                #bail out - we can only find one overlap per invocation, maybe?
+                break
+
+        # Whatever makes it here gets added as a new segment, because
+        # if it had overlapped, it would have gotten dovetailed and
+        # then fed back into add_segment. So this is sort of like the
+        # base case of a recursive function. Sort of. I think.
+        self.segments[new_line] = [new_node]
+        print("Segment {:19} = {} ({}) last resort".format(str(new_line), new_node, self.segments[new_line]))
         return
     
     def split(self, id, direction=None):
@@ -142,10 +154,10 @@ class Tree():
         # remove the split node's segments from the Tree
         print("Cleaning up edges of {}".format(cur))
         for line in cur.rect.get_edges():
-            print("Removing {} from {} ({})".format(cur, line, self.segments[line]))
             self.segments[line].remove(cur)
+            #print("Segment {:19} - {} ({})".format(str(line), cur, self.segments[line]))
             if self.segments[line] == []:
-                print("Deleting empty segment {}".format(line))
+                #print("Deleting empty segment {}".format(line))
                 del self.segments[line]
 
         #TODO should there be an add_node method?
