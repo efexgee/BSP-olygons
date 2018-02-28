@@ -3,20 +3,9 @@
 #TODO how to pep8?
 
 from rectree_node import *
+from rectree_edge import *
 from line import *
 from PIL import Image, ImageDraw
-
-class Edge():
-    ''' a Line and up to 2 Nodes'''
-    def __init__(self, line, node, same_as=None):
-        self.line = line
-        self.nodes = node
-        self.same_as = same_as
-
-    def __repr__(self):
-        # Don't print __repr__ of the linked Edge to avoid
-        # infinite reflection
-        return "{}: {} aka {}: {}".format(self.line, self.node, self.same_as.line, self.same_as.node))
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -27,15 +16,17 @@ class Tree():
         self.max_id = 0
 
         # A registry of all Edges in the Tree
-        self.edges = {}
+        self.registry = []
         for line in self.root.edges:
-            self.edges[line] = [self.root]
+            #TODO use append or += ?
+            self.registry.append(Edge(line, self.root))
 
         # Store the dimensions of the root node since we'll be
         # deleting its Rectangle
-        self.canvas = rectangle.dims
+        self.canvas_size = rectangle.dims
 
     def get(self, id):
+        ''' return the Node with the specified id '''
         def walk(cur, id):
             if cur is None:
                 return
@@ -55,50 +46,56 @@ class Tree():
     def register_edge(self, new_edge):
         print("> Registering Edge {}".format(new_edge))
 
-        def dovetail(line_a, node_a, line_b, node_b):
-            #TODO maybe I should make a segment class?
-            #TODO I don't like using 0 and assuming a single item list
-
-            print(">> Dovetailing lines {} and {}".format(line_a, line_b))
+        def dovetail(edge_a, edge_b):
+            print(">> Dovetailing lines {} and {}".format(edge_a, edge_b))
 
             last_vertex = None
-            new_segments = {}
+            new_edges = []
 
             # remove duplicates so we don't get 0-length lines
-            for vertex in sorted(set([line_a.start, line_a.end, line_b.start, line_b.end])):
+            for vertex in sorted(set([edge_a.line.start, edge_a.line.end, edge_b.line.start, edge_b.line.end])):
                 if last_vertex:
                     new_line = Line(last_vertex, vertex)
-                    new_segments[new_line] = []
-                    if new_line.issubset(line_a):
-                        #TODO use append or += ?
-                        new_segments[new_line].append(node_a)
-                        print("Dovetail {:19} + {} ({})".format(str(new_line), node_a, new_segments[new_line]))
-                    if new_line.issubset(line_b):
-                        new_segments[new_line].append(node_b)
-                        print("Dovetail {:19} + {} ({})".format(str(new_line), node_b, new_segments[new_line]))
+
+                    if new_line.issubset(edge_a.line):
+                        new_nodes.append(edge_a.node)
+                        print("Dovetail {:19} + {} ({})".format(str(new_line), edge_a.node))
+                    if new_line.issubset(edge_b.line):
+                        new_nodes.append(edge_b.node)
+                        print("Dovetail {:19} + {} ({})".format(str(new_line), edge_b.node))
+
+                    new_edge = Edge(new_line, new_nodes)
+
                 last_vertex = vertex
 
             #print("Returning new segment(s): {}".format(new_segments))
             return new_segments
 
-        if new_edge in self.edges:
-            #this exact line is already in the registry
-            #just add this node to that segment
-            assert len(self.segments[new_line]) == 1, "Segment doesn't have exactly 1 node: {}".format(self.segments[new_line])
-            self.segments[new_line] += [new_node]
-            print("Segment {:19} + {} ({}) just append a node".format(str(new_line), new_node, self.segments[new_line]))
-            return
+        for edge in self.registry:
+            # check if an Edge with this Line is already in the registry
+            if new_edge.twins(edge):
+                # if so, link the two Edges and we're done
+                # going to assume it's not already linked
+                new_edge.link(edge)
+                # going to assume there isn't another one
+                #TODO how much checking for exception cases should I be doing?
+                return
 
-        # check for overlapping segments
-        for existing_line in self.segments:
-            #print("Checking existing_line {} for overlap".format(existing_line))
-            if new_line.overlaps(existing_line):
-                print("{} overlaps with {} ({})".format(new_line, existing_line, self.segments[existing_line]))
-                existing_node = self.segments[existing_line][0]
-                new_segments = dovetail(new_line, new_node, existing_line, existing_node)
+            # check for overlapping segments
+            if new_edge.line.overlaps(edge.line):
+                print("{} overlaps with {} ({})".format(new_edge, edge))
+
+                assert edge.twin is None, "Edge should not have a twin: {}".format(edge)
+
+                new_node = new_edge.node
+                overlap_node = edge.node
+
+                new_edges = dovetail(new_edge, edge)
 
                 #the existing line will be entirely replaced
-                del self.segments[existing_line]
+                self.edges.remove(edge)
+                #TODO well, this just seems wrong
+                edge.node.edges.remove(edge)
 
                 print("Processing dovetails: {}".format(new_segments))
                 for new_segment_line in new_segments:
@@ -178,18 +175,10 @@ class Tree():
         
         # Remove Node from Edges in the Tree's registry
         for edge in cur.edges:
-            #TODO I'm making a dict where keys are Lines and values are Edges, which are
-            # a Line and up to two Nodes. This double-use of the same Line must be stupid?
-            self.segments[edge.line].remove_node(cur)
-            #print("Segment {:19} - {} ({})".format(str(line), cur, self.segments[line]))
-            # If this leaves the Edge empty, delete it from the registry
-            if self.segments[edge.line].isempty():
-                #print("Deleting empty segment {}".format(line))
-                #TODO when referencing the same index multiple times, do I just make a "pointer" to it?
-                del self.segments[edge.line]
+            self.registry.remove(edge)
+            cur.edges.remove(edge)
 
-        # Delete the Node's Edges
-        cur.edges = None
+        assert cur.edges is None, "Node {} should not have any edges but has {}".format(cur, cur.edges)
 
         #TODO Make an add_node() method or use Node.__init__()?
         # A method would keep Node agnostic of Tree's ID scheme
@@ -221,7 +210,7 @@ class Tree():
         return set(walk(self.get(start_id)))
 
     def show(self):
-        img_size = self.canvas + 1
+        img_size = self.canvas_size + 1
 
         img = Image.new("RGBA", img_size.astuple(), "black")
 
@@ -229,19 +218,17 @@ class Tree():
 
         self.add_to_draw(draw)
 
-        for segment in self.segments:
-            assert len(self.segments[segment]) == 1 or len(self.segments[segment]) == 2, "Segment {} has an impossible number of associated nodes: {} ({})".format(segment, len(self.segments[segment]), self.segments[segment])
-
+        for edge in self.registry:
             # All Edges are pink
             # Color all Edges tracked in the registry in blue
-            draw.line(segment.astuples(), fill="blue", width=3)
+            draw.line(edge.line.astuples(), fill="blue", width=3)
 
-            if len(self.segments[segment]) == 2:
+            if edge.twin is not None:
                 # Color all shared Edges green
-                draw.line(segment.astuples(), fill="lightgreen", width=3)
+                draw.line(edge.line.astuples(), fill="lightgreen", width=3)
                 # Connect the centroids of adjacent Rectangles
-                centroid_a = self.segments[segment][0].centroid()
-                centroid_b = self.segments[segment][1].centroid()
+                centroid_a = edge.node.centroid()
+                centroid_b = edge.twin.node.centroid()
                 draw.line((centroid_a.astuple(), centroid_b.astuple()), fill="black")
 
         img.show()

@@ -21,6 +21,9 @@ class Node():
     def centroid(self):
         ''' Return the centroid of a Node (floor division)
         Node.centroid -> XY object '''
+        #TODO should centroid be on Node or Rectangle?
+        #TODO are convenience wrapper methods a thing? i.e.
+        # Node.centroid() just calls Node.Rectangle.centroid()?
 
         return self.rect.orig + self.rect.dims // 2
 

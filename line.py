@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#TODO rename methods to make sense in line context
+
 from xy import *
 
 class Line():
@@ -9,6 +11,7 @@ class Line():
         #TODO validate length of > 1
         #TODO validate it is horizontal or vertical
         #TODO sort at init time
+        #TODO should I be sorting the start and end?
         if isinstance(start, tuple):
             self.start = XY(start)
         elif isinstance(start, XY):
