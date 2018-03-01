@@ -36,8 +36,6 @@ big_box.add_to_draw(pic)
 
 # Rectangle trees
 boxwood = Tree(big_box)
-boxwood.split(0, v)
-boxwood.split(2, v)
 
 # Lines
 la = Line(ten, (10,50))
@@ -68,6 +66,14 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
             leaves.add(node.id)
 
 
-sprout(boxwood, 2)
+boxwood.split(0, v)
+boxwood.split(2, v)
+#sprout(boxwood, 5)
+boxwood.split(1,h)
+boxwood.split(3,v)
+boxwood.split(4,v)
+boxwood.split(5,v)
+boxwood.show()
+boxwood.split(6,h)
 
 boxwood.show()

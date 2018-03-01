@@ -45,7 +45,7 @@ class Tree():
     def register_edge(self, new_edge):
         ''' add a new line to the registry, making the appropriate changes '''
         def dovetail(edge_a, edge_b):
-            print(">> Dovetailing lines {} and {}".format(edge_a, edge_b))
+            print("\n>> Dovetailing edges {} and {}".format(edge_a, edge_b))
 
             last_vertex = None
             new_edges = []
@@ -55,24 +55,36 @@ class Tree():
                 # if this is our second vertex, we can start making lines
                 if last_vertex:
                     new_line = Line(last_vertex, vertex)
+                    new_edge_a = None
+                    new_edge_b = None
 
+                    #TODO Creating an edge may warrant a method?
                     if new_line.issubset(edge_a.line):
-                        new_edges.append(Edge(new_line, edge_a.node))
+                        new_edge_a = Edge(new_line, edge_a.node)
+                        edge_a.node.edges.append(new_edge_a)
+                        new_edges.append(new_edge_a)
                     if new_line.issubset(edge_b.line):
-                        new_edges.append(Edge(new_line, edge_b.node))
+                        new_edge_b = Edge(new_line, edge_b.node)
+                        edge_b.node.edges.append(new_edge_b)
+                        new_edges.append(new_edge_b)
+
+                    if new_edge_a and new_edge_b:
+                        print("Cross-linking {} and {}".format(new_edge_a, new_edge_b))
+                        new_edge_a.link(new_edge_b)
 
                 last_vertex = vertex
 
             #print("Returning new segment(s): {}".format(new_segments))
             return new_edges
 
-        print("> Registering Edge {}".format(new_edge))
 
         for line in self.canvas.get_edges():
             if new_edge.line.issubset(line):
                 # not storing edges on the border because they can't be shared edges
-                print("Discarding {} because it's on the border".format(new_edge))
+                #print("Discarding {} because it's on the border".format(new_edge))
                 return
+
+        print("\n> Registering Edge {}".format(new_edge))
 
         safe_adds = []
         iffy_adds = []
@@ -90,7 +102,7 @@ class Tree():
                 return
 
             # check for overlapping segments
-            if new_edge.line.overlaps(edge.line):
+            if new_edge.overlaps(edge):
                 #TODO exploding an overlap changes the registry but we keep checking the loop
                 print("{} overlaps with {}".format(new_edge, edge))
 
@@ -104,13 +116,14 @@ class Tree():
                 # delete the overlapped line
                 # we know that this edge can't have a twin
                 self.registry.remove(edge)
+                print("Removed edge {} from registry".format(edge))
                 #TODO well, this just seems wrong
                 edge.node.edges.remove(edge)
 
                 print("Processing dovetails: {}".format(dovetails))
                 #TODO I'm running out of generic identifiers (edge, new_edge, etc.)
                 for dovetail_edge in dovetails:
-                    print("Processing dovetail {}".format(dovetail_edge))
+                    #print("Processing dovetail {}".format(dovetail_edge))
                     if dovetail_edge.touches(edge.node):
                         #any segment associated with the old node can be added safely
                         # because this segment can't have overlapped a line previously
@@ -118,10 +131,11 @@ class Tree():
                         print("{} is safe to add".format(dovetail_edge))
                     else:
                         #this segment still needs to be added correctly
-                        iffy_adds.append(dovetail_edge)
+                        iiffy_adds.append(dovetail_edge)
                         print("{} requires care".format(dovetail_edge))
 
         # End of the for loop over existing segments
+        print("End of loop for {}".format(new_edge))
 
         # if we had no overlaps, just plain add the new line, and we're done
         if not safe_adds:
@@ -130,15 +144,20 @@ class Tree():
             return
 
         self.registry += safe_adds
+        print("Added safe_adds to registry")
 
         if not iffy_adds:
             #TODO this is likely redundant but helps readability right now
+            print("No iffy_adds. We're done.")
             return
 
         for iffy_add in iffy_adds:
+            print("\n>>> Calling myself on {}".format(iffy_add))
             self.register_edge(iffy_add)
 
         '''
+verlaps with {}".format(new_edge, edge))
+
         At this point:
             - we weren't trying to add a border edge
             - we did not find a twin
@@ -155,7 +174,7 @@ class Tree():
     def split(self, id, direction=None):
         cur = self.get(id)
 
-        print("\n=== Splitting id {}:{} (probably into Node {} and Node {})".format(id, cur, self.max_id + 1, self.max_id + 2))
+        print("\n=== Splitting id {}:{} {} (probably into Node {} and Node {})".format(id, cur, direction, self.max_id + 1, self.max_id + 2))
 
         #TODO may be time to learn to implement exception handling
         # Check if node exist
@@ -261,13 +280,13 @@ class Tree():
         for edge in self.registry:
             # All Edges are pink
             # Color all Edges tracked in the registry in green
-            draw.line(edge.line.astuples(), fill="lightgreen", width=5)
+            draw.line(edge.line.astuples(), fill="red", width=4)
 
             if edge.twin is not None:
                 # Color all shared Edges blue
-                draw.line(edge.line.astuples(), fill="blue", width=1)
+                draw.line(edge.line.astuples(), fill="lightgreen", width=2)
                 # Connect the centroids of adjacent Rectangles
-                print(edge)
+                print("Drawing line across edge {}".format(edge))
                 centroid_a = edge.node.centroid()
                 centroid_b = edge.twin.node.centroid()
                 draw.line((centroid_a.astuple(), centroid_b.astuple()), fill="black")

@@ -2,6 +2,7 @@
 
 #TODO rename methods to make sense in line context
 
+from math import sqrt
 from xy import *
 
 class Line():
@@ -31,13 +32,21 @@ class Line():
         assert isinstance(point, XY), "Argument must be an XY object: {} is type {}".format(point, type(point))
 
         if self.orientation() == "vertical" and self.start.x == point.x:
+            #print("vertical")
             if min(self.start.y, self.end.y) <= point.y <= max(self.start.y, self.end.y):
                 return True
         elif self.orientation() == "horizontal" and self.start.y == point.y:
+            ##print("horizontal")
             if min(self.start.x, self.end.x) <= point.x <= max(self.start.x, self.end.x):
                 return True
         else:
             return False
+
+    def __len__(self):
+        ''' The length of the line in pixel, rounded to the nearest integer '''
+        run, rise = (self.end - self.start).astuple()
+
+        return round(sqrt(run**2 + rise**2))
 
     def orientation(self):
         ''' Return whether the line is vertical or horizontal '''
@@ -83,24 +92,33 @@ class Line():
 
     def overlaps(self, line):
         if not self.iscontiguous(line):
+            #print("{} and {} are not contiguous".format(self, line))
             return False
 
-        if min(self.start, self.end) < line.start < max(self.start, self.end) or min(self.start, self.end) < line.end < max(self.start, self.end):
+        min_vertex = min(self.start, self.end, line.start, line.end)
+        max_vertex = max(self.start, self.end, line.start, line.end)
+
+        # If the distance between the outer two vertices is less than
+        # the sum distance of the two lines, they must overlap
+        if len(Line(min_vertex, max_vertex)) < len(self) + len(line):
             return True
 
     def iscontiguous(self, line):
         ''' Check whether the lines form a contiguous line '''
-        #TODO this is not symmetrical!?
 
         if not self.orientation() == line.orientation():
             #print("diff orientations")
             return False
 
-        if not (line.start in self or line.end in self):
-            #print("arg vertices not on line")
-            return False
+        #TODO This could be slicker
+        if line.start in self or line.end in self:
+            #print("part of {} falls on {}".format(line, self))
+            return True
+        if self.start in line or self.end in line: 
+            #print("part of {} falls on {}".format(self, line))
+            return True
 
-        return True
+        return False
 
     def shares_vertex(self, line):
         ''' Check whether the lines share an end point '''

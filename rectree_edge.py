@@ -17,13 +17,23 @@ class Edge():
         self.twin = edge
         edge.twin = self
 
-    #def __eq__(self, edge):
-        ##TODO does having to implement this mean I did something wrong?
-        #return self.line == edge.line and self.node == edge.node
+    def __eq__(self, edge):
+        #TODO does having to implement this mean I did something wrong?
+        return self.line == edge.line and self.node == edge.node
 
     def __contains__(self, node):
         ''' check whether Edge contains Node '''
         return node == self.node
+
+    def overlaps(self, edge):
+        #print("Checking overlap between {} and {}".format(self.line, edge.line))
+        if self.line.overlaps(edge.line):
+            return True
+        if edge.twin:
+            #print("Checking overlap between {} and {}".format(self.line, edge.twin.line))
+            if self.line.overlaps(edge.twin.line):
+                return True
+        return False
 
     def touches(self, node):
         ''' check whether Edge touches Node '''
