@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from rectree_edge import *
-
 class Node():
     ''' node for a binary tree of Rectangles '''
 
@@ -16,9 +14,6 @@ class Node():
 
         self.rect = rectangle
         self.rect.label = id
-
-        #TODO reference the rect via self.rect or rectangle?
-        self.edges = [Edge(line, self) for line in self.rect.get_edges()]
 
     def centroid(self):
         ''' Return the centroid of a Node (floor division)

@@ -17,7 +17,9 @@ class Tree():
         self.max_id = 0
 
         # A registry of all Edges in the Tree
-        self.registry = self.root.edges.copy()
+        self.registry = []
+        for line in self.root.rect.get_edges():
+            self.registry.append(Edge(line, self.root))
 
         # Store the dimensions of the root node since we'll be
         # deleting its Rectangle
@@ -61,11 +63,9 @@ class Tree():
                     #TODO Creating an edge may warrant a method?
                     if new_line.issubset(edge_a.line):
                         new_edge_a = Edge(new_line, edge_a.node)
-                        edge_a.node.edges.append(new_edge_a)
                         new_edges.append(new_edge_a)
                     if new_line.issubset(edge_b.line):
                         new_edge_b = Edge(new_line, edge_b.node)
-                        edge_b.node.edges.append(new_edge_b)
                         new_edges.append(new_edge_b)
 
                     if new_edge_a and new_edge_b:
@@ -86,8 +86,14 @@ class Tree():
 
         print("\n> Registering Edge {}".format(new_edge))
 
+        if new_edge in self.registry:
+            #TODO I don't know if this is a hack/path or not :(
+            print("{} already exists in registry".format(new_edge))
+            return
+
         safe_adds = []
         iffy_adds = []
+        removals = []
 
         for edge in self.registry:
             # if the registry has a twin for this Edge, link them, and we're done
@@ -115,12 +121,12 @@ class Tree():
 
                 # delete the overlapped line
                 # we know that this edge can't have a twin
-                self.registry.remove(edge)
-                print("Removed edge {} from registry".format(edge))
-                #TODO well, this just seems wrong
-                edge.node.edges.remove(edge)
+                #self.registry.remove(edge)
+                #print("Removed edge {} from registry".format(edge))
+                removals.append(edge)
+                print("Marked {} for removal from registry".format(edge))
 
-                print("Processing dovetails: {}".format(dovetails))
+                print("Processing dovetails")
                 #TODO I'm running out of generic identifiers (edge, new_edge, etc.)
                 for dovetail_edge in dovetails:
                     #print("Processing dovetail {}".format(dovetail_edge))
@@ -131,11 +137,15 @@ class Tree():
                         print("{} is safe to add".format(dovetail_edge))
                     else:
                         #this segment still needs to be added correctly
-                        iiffy_adds.append(dovetail_edge)
+                        iffy_adds.append(dovetail_edge)
                         print("{} requires care".format(dovetail_edge))
 
         # End of the for loop over existing segments
         print("End of loop for {}".format(new_edge))
+
+        for deado in removals:
+            self.registry.remove(deado)
+            print("Removed edge {} from registry".format(deado))
 
         # if we had no overlaps, just plain add the new line, and we're done
         if not safe_adds:
@@ -145,6 +155,8 @@ class Tree():
 
         self.registry += safe_adds
         print("Added safe_adds to registry")
+
+        print("iffy_adds={}".format(iffy_adds))
 
         if not iffy_adds:
             #TODO this is likely redundant but helps readability right now
@@ -216,30 +228,16 @@ verlaps with {}".format(new_edge, edge))
 
         #                add Edges to tree's Edge registry
 
-        print("Cleaning up edges of {}".format(cur))
 
         # Remove Node's Rectangle
         #TODO what is the good way to delete/remove/blank things in objects?
         cur.rect = None
-        
-        #print("cur.edges={}\n".format(cur.edges))
-        #print("self.registry={}\n".format(self.registry))
+
+        print("Cleaning up edges of {}".format(cur))
+
         # Remove Node from Edges in the Tree's registry
-        for edge in cur.edges:
-            print("Cleaning up {}".format(edge))
-            if edge in self.registry:
-                # border edges won't be in the registry
-                #TODO is there a "remove if you can"?
-                #TODO this is NOT happening... but how to do it correctly?
-                if edge.twin:
-                    edge.twin.twin = None
-                self.registry.remove(edge)
+        self.reg_del(cur)
         
-        cur.edges = None
-
-        assert cur.edges is None, "Node {} should not have any edges but has {}".format(cur, cur.edges)
-
-        #TODO Make an add_node() method or use Node.__init__()?
         # A method would keep Node agnostic of Tree's ID scheme
         cur.a = self.add_node(cur, rect_a)
         cur.b = self.add_node(cur, rect_b)
@@ -252,10 +250,24 @@ verlaps with {}".format(new_edge, edge))
         new_node = Node(self.max_id, parent, rectangle)
 
         # Add the edges to the Tree's registry
-        for edge in new_node.edges:
-            self.register_edge(edge)
+        for line in new_node.rect.get_edges():
+            self.register_edge(Edge(line, new_node))
 
         return new_node
+
+    def reg_del(self, node):
+        nodes_edges = []
+
+        for edge in self.registry:
+            if node in edge:
+            #TODO using touches would change the logic in the twin handling
+            #if edge.touches(node):
+                if edge.twin:
+                    edge.twin.twin = None
+                nodes_edges.append(edge)
+
+        for edge in nodes_edges:
+            self.registry.remove(edge)
 
     def leaves(self, start_id=0):
     # This only shows the id, not the rectangles
@@ -286,7 +298,7 @@ verlaps with {}".format(new_edge, edge))
                 # Color all shared Edges blue
                 draw.line(edge.line.astuples(), fill="lightgreen", width=2)
                 # Connect the centroids of adjacent Rectangles
-                print("Drawing line across edge {}".format(edge))
+                #print("Drawing line across edge {}".format(edge))
                 centroid_a = edge.node.centroid()
                 centroid_b = edge.twin.node.centroid()
                 draw.line((centroid_a.astuple(), centroid_b.astuple()), fill="black")
