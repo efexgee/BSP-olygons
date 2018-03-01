@@ -66,6 +66,7 @@ class Line():
 
     def issubset(self, line):
         ''' Check whether the line is a sub-segment of a line '''
+        #TODO check if they are even on the same line first
         return min(line.start, line.end) <= min(self.start, self.end) and max(self.start, self.end) <= max(line.start, line.end)
 
     def symmetric_difference(self, line):

@@ -4,6 +4,7 @@
 
 from rectree_node import *
 from rectree_edge import *
+from rectree_rectangle import *
 from line import *
 from PIL import Image, ImageDraw
 
@@ -16,14 +17,12 @@ class Tree():
         self.max_id = 0
 
         # A registry of all Edges in the Tree
-        self.registry = []
-        for line in self.root.edges:
-            #TODO use append or += ?
-            self.registry.append(Edge(line, self.root))
+        self.registry = self.root.edges.copy()
 
         # Store the dimensions of the root node since we'll be
         # deleting its Rectangle
-        self.canvas_size = rectangle.dims
+        #TODO reference 'rectangle' or 'self.root.rectangle'?
+        self.canvas = Rectangle(rectangle.orig, rectangle.dims)
 
     def get(self, id):
         ''' return the Node with the specified id '''
@@ -44,8 +43,7 @@ class Tree():
         return walk(self.root, id)
 
     def register_edge(self, new_edge):
-        print("> Registering Edge {}".format(new_edge))
-
+        ''' add a new line to the registry, making the appropriate changes '''
         def dovetail(edge_a, edge_b):
             print(">> Dovetailing lines {} and {}".format(edge_a, edge_b))
 
@@ -54,78 +52,110 @@ class Tree():
 
             # remove duplicates so we don't get 0-length lines
             for vertex in sorted(set([edge_a.line.start, edge_a.line.end, edge_b.line.start, edge_b.line.end])):
+                # if this is our second vertex, we can start making lines
                 if last_vertex:
                     new_line = Line(last_vertex, vertex)
 
                     if new_line.issubset(edge_a.line):
-                        new_nodes.append(edge_a.node)
-                        print("Dovetail {:19} + {} ({})".format(str(new_line), edge_a.node))
+                        new_edges.append(Edge(new_line, edge_a.node))
                     if new_line.issubset(edge_b.line):
-                        new_nodes.append(edge_b.node)
-                        print("Dovetail {:19} + {} ({})".format(str(new_line), edge_b.node))
-
-                    new_edge = Edge(new_line, new_nodes)
+                        new_edges.append(Edge(new_line, edge_b.node))
 
                 last_vertex = vertex
 
             #print("Returning new segment(s): {}".format(new_segments))
-            return new_segments
+            return new_edges
+
+        print("> Registering Edge {}".format(new_edge))
+
+        for line in self.canvas.get_edges():
+            if new_edge.line.issubset(line):
+                # not storing edges on the border because they can't be shared edges
+                print("Discarding {} because it's on the border".format(new_edge))
+                return
+
+        safe_adds = []
+        iffy_adds = []
 
         for edge in self.registry:
-            # check if an Edge with this Line is already in the registry
+            # if the registry has a twin for this Edge, link them, and we're done
             if new_edge.twins(edge):
-                # if so, link the two Edges and we're done
                 # going to assume it's not already linked
+                print("Twinning {} with {} in registry".format(new_edge, edge))
+                self.registry.append(new_edge)
                 new_edge.link(edge)
-                # going to assume there isn't another one
+                #print("self.registry={}\n".format(self.registry))
+                # going to assume there isn't another twin
                 #TODO how much checking for exception cases should I be doing?
                 return
 
             # check for overlapping segments
             if new_edge.line.overlaps(edge.line):
-                print("{} overlaps with {} ({})".format(new_edge, edge))
+                #TODO exploding an overlap changes the registry but we keep checking the loop
+                print("{} overlaps with {}".format(new_edge, edge))
 
                 assert edge.twin is None, "Edge should not have a twin: {}".format(edge)
 
                 new_node = new_edge.node
                 overlap_node = edge.node
 
-                new_edges = dovetail(new_edge, edge)
+                dovetails = dovetail(new_edge, edge)
 
-                #the existing line will be entirely replaced
-                self.edges.remove(edge)
+                # delete the overlapped line
+                # we know that this edge can't have a twin
+                self.registry.remove(edge)
                 #TODO well, this just seems wrong
                 edge.node.edges.remove(edge)
 
-                print("Processing dovetails: {}".format(new_segments))
-                for new_segment_line in new_segments:
-                    print("Processing {}".format(new_segment_line, new_segments[new_segment_line]))
-                    #TODO I think I need a segment class
-                    if existing_node in new_segments[new_segment_line]:
-                        #any segment associated with the old node goes straight into
-                        #the registry
-                        #print(self.segments)
-                        #print(new_segment_line)
-                        assert new_segment_line not in self.segments, "Trying to overwrite {} ({}) with dovetail {} ({})".format(new_segment_line, self.segments[new_segment_line], new_segment_line, existing_node)
-                        self.segments[new_segment_line] = new_segments[new_segment_line]
-                        print("Segment {:19} = {} ({}) add any olds".format(str(new_segment_line), new_segments[new_segment_line], self.segments[new_segment_line]))
+                print("Processing dovetails: {}".format(dovetails))
+                #TODO I'm running out of generic identifiers (edge, new_edge, etc.)
+                for dovetail_edge in dovetails:
+                    print("Processing dovetail {}".format(dovetail_edge))
+                    if dovetail_edge.touches(edge.node):
+                        #any segment associated with the old node can be added safely
+                        # because this segment can't have overlapped a line previously
+                        safe_adds.append(dovetail_edge)
+                        print("{} is safe to add".format(dovetail_edge))
                     else:
-                        self.add_segment(new_segment_line, new_node)
-                #bail out - we can only find one overlap per invocation, maybe?
-                break
+                        #this segment still needs to be added correctly
+                        iffy_adds.append(dovetail_edge)
+                        print("{} requires care".format(dovetail_edge))
 
-        # Whatever makes it here gets added as a new segment, because
-        # if it had overlapped, it would have gotten dovetailed and
-        # then fed back into add_segment. So this is sort of like the
-        # base case of a recursive function. Sort of. I think.
-        self.segments[new_line] = [new_node]
-        print("Segment {:19} = {} ({}) last resort".format(str(new_line), new_node, self.segments[new_line]))
-        return
+        # End of the for loop over existing segments
+
+        # if we had no overlaps, just plain add the new line, and we're done
+        if not safe_adds:
+            self.registry.append(new_edge)
+            print("Added {} to registry".format(new_edge))
+            return
+
+        self.registry += safe_adds
+
+        if not iffy_adds:
+            #TODO this is likely redundant but helps readability right now
+            return
+
+        for iffy_add in iffy_adds:
+            self.register_edge(iffy_add)
+
+        '''
+        At this point:
+            - we weren't trying to add a border edge
+            - we did not find a twin
+            - we did a plain add if we had no overlaps
+            - we have exploded all the overlaps
+            - any overlapped edges have been deleted
+            - safe_adds have been added to replace the overlapped edges
+            - new_edge no longer matters
+            - iffy_adds need to be handle appropriately
+                + iffy_adds contains 0 - 2 edges (I think)
+        '''
+
     
     def split(self, id, direction=None):
         cur = self.get(id)
 
-        print("=== Splitting {} (probably into Node {} and Node {})".format(cur, self.max_id + 1, self.max_id + 2))
+        print("\n=== Splitting id {}:{} (probably into Node {} and Node {})".format(id, cur, self.max_id + 1, self.max_id + 2))
 
         #TODO may be time to learn to implement exception handling
         # Check if node exist
@@ -173,10 +203,20 @@ class Tree():
         #TODO what is the good way to delete/remove/blank things in objects?
         cur.rect = None
         
+        #print("cur.edges={}\n".format(cur.edges))
+        #print("self.registry={}\n".format(self.registry))
         # Remove Node from Edges in the Tree's registry
         for edge in cur.edges:
-            self.registry.remove(edge)
-            cur.edges.remove(edge)
+            print("Cleaning up {}".format(edge))
+            if edge in self.registry:
+                # border edges won't be in the registry
+                #TODO is there a "remove if you can"?
+                #TODO this is NOT happening... but how to do it correctly?
+                if edge.twin:
+                    edge.twin.twin = None
+                self.registry.remove(edge)
+        
+        cur.edges = None
 
         assert cur.edges is None, "Node {} should not have any edges but has {}".format(cur, cur.edges)
 
@@ -210,7 +250,7 @@ class Tree():
         return set(walk(self.get(start_id)))
 
     def show(self):
-        img_size = self.canvas_size + 1
+        img_size = self.canvas.dims + 1
 
         img = Image.new("RGBA", img_size.astuple(), "black")
 
@@ -220,13 +260,14 @@ class Tree():
 
         for edge in self.registry:
             # All Edges are pink
-            # Color all Edges tracked in the registry in blue
-            draw.line(edge.line.astuples(), fill="blue", width=3)
+            # Color all Edges tracked in the registry in green
+            draw.line(edge.line.astuples(), fill="lightgreen", width=5)
 
             if edge.twin is not None:
-                # Color all shared Edges green
-                draw.line(edge.line.astuples(), fill="lightgreen", width=3)
+                # Color all shared Edges blue
+                draw.line(edge.line.astuples(), fill="blue", width=1)
                 # Connect the centroids of adjacent Rectangles
+                print(edge)
                 centroid_a = edge.node.centroid()
                 centroid_b = edge.twin.node.centroid()
                 draw.line((centroid_a.astuple(), centroid_b.astuple()), fill="black")

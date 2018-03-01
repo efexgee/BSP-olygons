@@ -99,7 +99,7 @@ class XY():
         elif self.y == value.y:
             return self.x > value.x
         else:
-            print("XY objects don't share an axis: {} and {}".format(self, value))
+            print("Shared axis required to order XY objects: {} and {}".format(self, value))
 
     def __ge__(self, value):
         return self > value or self == value

@@ -62,7 +62,10 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
         else:
             split_type = choice(split_types)
 
-        leaves.update(tree.split(split_id, split_type))
+        new_nodes = tree.split(split_id, split_type)
+        #TODO how do I do this nicer? comprehension?
+        for node in new_nodes:
+            leaves.add(node.id)
 
 
 sprout(boxwood, 2)
