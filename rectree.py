@@ -66,8 +66,8 @@ def sprout(tree, num_splits, start_id=0, squarish=False):
             leaves.add(node.id)
 
 
-boxwood.split(0, v)
-boxwood.split(2, v)
-sprout(boxwood, 20)
+#boxwood.split(0, v)
+#boxwood.split(2, v)
+#sprout(boxwood, 20)
 
-boxwood.show()
+#boxwood.show()

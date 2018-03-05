@@ -2,10 +2,20 @@
 
 #TODO rename methods to make sense in line context
 
-from math import sqrt
+from math import hypot, isclose, inf
 from xy import *
+from PIL import Image, ImageDraw
 
 class Line():
+    ''' A straight line between two points '''
+
+    _DEFAULT_BACKGROUND_COLOR = "white"
+    _DEFAULT_LINE_COLOR = "black"
+    _DEFAULT_WIDTH = 2
+    # Add additional space beyond the bounding box of the Line
+    # when displaying Line alone in .show()
+    _CANVAS_PADDING = 10
+
     # These assume to be vertical or horizontal lines
     def __init__(self, start, end):
         #TODO validate that these are XY objects
@@ -13,112 +23,102 @@ class Line():
         #TODO validate it is horizontal or vertical
         #TODO sort at init time
         #TODO should I be sorting the start and end?
+        if start == end:
+            raise ValueError("Won't create zero-length Line: {} {}".format(start, end))
+
         if isinstance(start, tuple):
             self.start = XY(start)
         elif isinstance(start, XY):
             self.start = start
         else:
-            print("What am I supposed to do with this? {} is type {}".format(start, type(start)))
+            raise TypeError("What am I supposed to do with this? {} is type {}".format(start, type(start)))
 
         if isinstance(end, tuple):
             self.end = XY(end)
         elif isinstance(end, XY):
             self.end = end
         else:
-            print("What am I supposed to do with this? {} is type {}".format(start, type(start)))
+            raise TypeError("What am I supposed to do with this? {} is type {}".format(start, type(start)))
 
     def __contains__(self, point):
+        #TODO poor form to overload a dunder like this?
+        #TODO maybe this should handle both XY and Lines?
+        # would that be terrible? or Pythonic?
         ''' Check whether a point is on the line '''
-        assert isinstance(point, XY), "Argument must be an XY object: {} is type {}".format(point, type(point))
+        if not isinstance(point, XY):
+            raise TypeError("Argument must be an XY object: {} is type {}".format(point, type(point)))
 
-        if self.orientation() == "vertical" and self.start.x == point.x:
-            #print("vertical")
-            if min(self.start.y, self.end.y) <= point.y <= max(self.start.y, self.end.y):
-                return True
-        elif self.orientation() == "horizontal" and self.start.y == point.y:
-            ##print("horizontal")
-            if min(self.start.x, self.end.x) <= point.x <= max(self.start.x, self.end.x):
-                return True
-        else:
-            return False
+        # If point is one of the Line's vertices, we can't
+        # calculate a slope
+        if self.has_vertex(point):
+            #TODO It is curious how I sometimes feel I need to have
+            # the explicit else and sometimes not
+            return True
+
+        #TODO Oh good. Checking for equality on floats. This
+        # can't possibly go wrong
+        # Using default args to math.isclose()
+        return isclose(self.slope(), Line(self.start, point).slope())
+
+    def xy_len(self):
+        ''' Return the length of the Line as an XY object representing
+            rise over run '''
+        offset = self.end - self.start
+
+        # If the run is negative, convert the slope
+        if offset.x < 0:
+            offset *= -1
+
+        return offset
+
+    def float_len(self):
+        ''' Return the length of the Line as a floating point number '''
+        rise, run = self.xy_len().astuple()
+
+        return hypot(rise, run)
 
     def __len__(self):
-        ''' The length of the line in pixel, rounded to the nearest integer '''
-        run, rise = (self.end - self.start).astuple()
-
-        return round(sqrt(run**2 + rise**2))
-
-    def orientation(self):
-        ''' Return whether the line is vertical or horizontal '''
-        if self.start.x == self.end.x:
-            return "vertical"
-        elif self.start.y == self.end.y:
-            return "horizontal"
-        else:
-            print("This line is diagonal: {}".format(self))
+        ''' The length of the line in pixels, rounded to the nearest integer '''
+        #TODO Are we OK with this staggered design?
+        return round(self.float_len())
 
     def __eq__(self, line):
         ''' Check whether the line is the same as another line, regardless of direction '''
         return not {self.start, self.end}.symmetric_difference({line.start, line.end})
 
-    def difference(self, line):
-        ''' in this, but not other (NOT IMPLEMENTED) '''
-        pass
+    def xy_slope(self):
+        ''' Return the slope of the Line as an XY object represenating
+            rise over run '''
+        #TODO is this OK? essentially just aliasing
+        return self.xy_len()
 
-    def intersection(self, line):
-        ''' in both (NOT IMPLEMENTED) '''
-        pass
+    def slope(self):
+        ''' Return the slope of the Line (as a floating point number) '''
+        rise, run = self.xy_slope().astuple()
 
-    def isdisjoint(self, line):
-        ''' null intersection (NOT IMPLEMENTED) '''
-        pass
+        #TODO is this how this is done?
+        try:
+            return rise / run
+        except ZeroDivisionError:
+            # The slope of a vertical line is undefined but I think
+            # using infinity makes compares tighter
+            return inf
 
-    def issubset(self, line):
-        ''' Check whether the line is a sub-segment of a line '''
-        #TODO check if they are even on the same line first
-        return min(line.start, line.end) <= min(self.start, self.end) and max(self.start, self.end) <= max(line.start, line.end)
+    def split(self, vertex):
+        ''' Split Line on vertex XY, returning two new Lines '''
+        if vertex not in self:
+            #TODO KeyError real iffy here
+            raise KeyError("{} is not on Line {}".format(vertex, self))
 
-    def symmetric_difference(self, line):
-        ''' in this XOR other (NOT IMPLEMENTED) '''
-        pass
+        if vertex == self.start or vertex == self.end:
+            # Zero-length Lines are not allowed
+            raise ValueError("Can't split a Line on one of its vertices: line={} vertex={}".format(self, vertex))
 
-    def union(self, line):
-        ''' Return a new line formed of the two lines '''
-        if not self.iscontiguous(line):
-            #TODO maybe this would be a good place to catch exceptions
-            print("Can't union non-contiguous lines: {} and {}".format(self, line))
+        return Line(self.start, vertex), Line(self.end, vertex)
 
-        return Line(min(self.start, self.end, line.start, line.end), max(self.start, self.end, line.start, line.end))
-
-    def overlaps(self, line):
-        if not self.iscontiguous(line):
-            #print("{} and {} are not contiguous".format(self, line))
-            return False
-
-        min_vertex = min(self.start, self.end, line.start, line.end)
-        max_vertex = max(self.start, self.end, line.start, line.end)
-
-        # If the distance between the outer two vertices is less than
-        # the sum distance of the two lines, they must overlap
-        if len(Line(min_vertex, max_vertex)) < len(self) + len(line):
-            return True
-
-    def iscontiguous(self, line):
-        ''' Check whether the lines form a contiguous line '''
-
-        if not self.orientation() == line.orientation():
-            #print("diff orientations")
-            return False
-
-        #TODO This could be slicker
-        if line.start in self or line.end in self:
-            #print("part of {} falls on {}".format(line, self))
-            return True
-        if self.start in line or self.end in line: 
-            #print("part of {} falls on {}".format(self, line))
-            return True
-
-        return False
+    def has_vertex(self, vertex):
+        ''' Check whether XY is one of Line's vertices '''
+        return vertex == self.start or vertex == self.end
 
     def shares_vertex(self, line):
         ''' Check whether the lines share an end point '''
@@ -129,14 +129,36 @@ class Line():
 
     def astuples(self):
         ''' Return end points as a tuple of tuples (to use with PIL) '''
+        #TODO doesn't feel good.
         return (self.start.astuple(), self.end.astuple())
 
-    def __hash__(self):
-        #TODO I don't see how hashing an equivalent data structure is any
-        # safer than hashing the __repr__
-        return hash(str(self))
+    def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_WIDTH):
+        ''' Draw the line on a provided PIL draw object '''
+        draw.line(self.astuples(), fill=color, width=width)
+
+    def get_canvas_size(self):
+        ''' Provide dimensions required to display Line '''
+        # This is broken out from .show() for Edge.show()
+        return XY(max(self.start.x, self.end.x), max(self.start.y, self.end.y)) + Line._CANVAS_PADDING
+
+    def show(self):
+        ''' Show the line '''
+        img_size = self.get_canvas_size()
+
+        img = Image.new("RGBA", img_size.astuple(), Line._DEFAULT_BACKGROUND_COLOR)
+
+        draw = ImageDraw.Draw(img)
+
+        self.add_to_draw(draw)
+
+        img.show()
 
     def __repr__(self):
         #return str((self.start, self.end))
         #DEBUG for readability
         return "{}-{}".format(self.start, self.end)
+
+    def __hash__(self):
+        #TODO I don't see how hashing an equivalent data structure is any
+        # safer than hashing the __repr__
+        return hash(str(self))
