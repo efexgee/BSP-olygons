@@ -24,7 +24,7 @@ class XY():
             else:
                 self.y = y
         else:
-            print("Arguments aren't int or tuple: x={} y={}".format(x, y))
+            raise TypeError("Arguments aren't int or tuple: x={} y={}".format(x, y))
 
     @property
     def x(self):
@@ -32,8 +32,13 @@ class XY():
 
     @x.setter
     def x(self, value):
-        assert isinstance(value, int), "value is not an integer: {}".format(value)
-        assert value >= 0, "value is not positive: {}".format(value)
+        if not isinstance(value, int):
+            raise TypeError("value is not an integer: {}".format(value))
+        #TODO I can't ensure positive values if I'm going to use
+        # XY to represent offsets / slopes
+        #if not value >= 0:
+            #TODO is there a check for positive I should be using?
+            #raise ValueError("value is not positive: {}".format(value))
         self._x = value
 
     @property
@@ -42,8 +47,10 @@ class XY():
 
     @y.setter
     def y(self, value):
-        assert isinstance(value, int), "value is not an integer: {}".format(value)
-        assert value >= 0, "value is not positive: {}".format(value)
+        if not isinstance(value, int):
+            raise TypeError("value is not an integer: {}".format(value))
+        #if not value >= 0:
+            #raise ValueError("value is not positive: {}".format(value))
         self._y = value
 
     def __add__(self, value):
@@ -99,9 +106,8 @@ class XY():
         elif self.y == value.y:
             return self.x > value.x
         else:
-            #DEBUG This shouldn't be commented out
-            pass
-            #print("Shared axis required to order XY objects: {} and {}".format(self, value))
+            #TODO what should be raised here?
+            raise UserWarning("Shared axis required to order XY objects: {} and {}".format(self, value))
 
     def __ge__(self, value):
         return self > value or self == value
