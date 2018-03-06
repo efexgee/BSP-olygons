@@ -38,3 +38,5 @@ assert lb.shares_vertex(le)
 
 print(lf.split(hundred))
 print(le.split(XY(50,66)))
+
+# Edges

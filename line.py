@@ -138,7 +138,7 @@ class Line():
 
     def get_canvas_size(self):
         ''' Provide dimensions required to display Line '''
-        # This is broken out from .show() for Edge.show()
+        # This is broken out from .show() to allow Edge.show()
         return XY(max(self.start.x, self.end.x), max(self.start.y, self.end.y)) + Line._CANVAS_PADDING
 
     def show(self):

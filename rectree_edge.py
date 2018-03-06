@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from PIL import Image, ImageDraw
+from line import *
+
 class Edge():
     ''' a Line and two Nodes '''
 
@@ -59,12 +62,12 @@ class Edge():
         #so need to pass nothing in case of None. awkward
         #How do I do that?
 
-        edge.line.add_to_draw(draw)
+        self.line.add_to_draw(draw)
         #TODO label with the two nodes
         # This is going to be a bit of a to-do
 
     def show(self):
-        ''' Show the line '''
+        ''' Show the Line of the Edge '''
         img_size = self.line.get_canvas_size()
 
         img = Image.new("RGBA", img_size.astuple(), Line._DEFAULT_BACKGROUND_COLOR)
@@ -76,5 +79,4 @@ class Edge():
         img.show()
 
     def __repr__(self):
-        if self.twin:
-            return "{}: {}, {}".format(self.line, self.node_a, self.node_b)
+        return "{}: {}, {}".format(self.line, self.node_a, self.node_b)
