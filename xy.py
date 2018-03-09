@@ -37,7 +37,6 @@ class XY():
         #TODO I can't ensure positive values if I'm going to use
         # XY to represent offsets / slopes
         #if not value >= 0:
-            #TODO is there a check for positive I should be using?
             #raise ValueError("value is not positive: {}".format(value))
         self._x = value
 
@@ -85,7 +84,7 @@ class XY():
 
     def fitsin(self, value):
         #TODO rename 'value' on all these
-        #TODO should this be cancontain instead?
+        #TODO shouldn't be a method at all, as this name/concept
         # Both x and y are greater than value's x and y
         # i.e. a rectangle with dimensions 'value' could
         # fit inside a rectangle with our dimensions
@@ -95,10 +94,12 @@ class XY():
             return False
 
     def __hash__(self):
+        #TODO probably no point to having a hash since I can't use
+        # this as a key
         return hash(self.astuple())
 
     def __gt__(self, value):
-        # compare the non-shares dimension
+        # compare the non-equal dimensions
         # A > B if A and B are on the same vertical or horizontal
         # line and A is further from the origin than B
         if self.x == value.x:
@@ -106,7 +107,7 @@ class XY():
         elif self.y == value.y:
             return self.x > value.x
         else:
-            #TODO what should be raised here?
+            #TODO this should not be a warning-exception
             raise UserWarning("Shared axis required to order XY objects: {} and {}".format(self, value))
 
     def __ge__(self, value):

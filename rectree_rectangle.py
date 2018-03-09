@@ -62,7 +62,7 @@ class Rectangle():
         lower_right = self.orig + self.dims
         #TODO making a new XY much better than (0,1) mult shenanigans, right?
         lower_left = self.orig + XY(0, self.dims.y)
-
+        #lower_left = self.orig + self.dims * XY(0,1)
 
         north = Line(self.orig, upper_right)
         east = Line(upper_right, lower_right)

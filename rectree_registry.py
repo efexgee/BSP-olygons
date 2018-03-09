@@ -2,13 +2,11 @@
 
 from rectree_edge import *
 
+#TODO use UserList
 class EdgeRegistry(list):
     ''' A list of Edges that can be addressed by their Lines '''
 
     _DEFAULT_BACKGROUND_COLOR = "white"
-
-    #def __init__(self, edges=None):
-        #TODO why does this work? why is 'edges=' not needed?
 
     def get_canvas_size(self):
         ''' Return image size required to display all Lines '''
@@ -70,7 +68,7 @@ class EdgeRegistry(list):
     def get_edge(self, value):
         ''' Return the Edge which contains a Line or vertex '''
         # This is toast but I like the question
-        #TODO is this OK?
+        #TODO why is this toast? privatize the dispatchees
         if isinstance(value, line):
             return self.get_edge_by_line(value)
         elif isinstance(value, XY):
@@ -89,6 +87,7 @@ class EdgeRegistry(list):
         img_size = self.get_canvas_size()
 
         if img_size == XY(0):
+            #TODO this is a debugging error, maybe an assertion then
             raise UserWarning("Not drawing a zero-size image")
 
         img = Image.new("RGBA", img_size.astuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
@@ -100,6 +99,7 @@ class EdgeRegistry(list):
         img.show()
 
     def __contains__(self, line):
+        #TODO in English, please
         ''' Check whether Line is any of the Edges '''
         found = False
 

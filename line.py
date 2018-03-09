@@ -16,13 +16,8 @@ class Line():
     # when displaying Line alone in .show()
     _CANVAS_PADDING = 10
 
-    # These assume to be vertical or horizontal lines
     def __init__(self, start, end):
         #TODO validate that these are XY objects
-        #TODO validate length of > 1
-        #TODO validate it is horizontal or vertical
-        #TODO sort at init time
-        #TODO should I be sorting the start and end?
         if start == end:
             raise ValueError("Won't create zero-length Line: {} {}".format(start, end))
 
@@ -32,6 +27,7 @@ class Line():
             self.start = start
         else:
             raise TypeError("What am I supposed to do with this? {} is type {}".format(start, type(start)))
+            #TODO convert to f-strings: f"whatever {start} poo {type(start)}"
 
         if isinstance(end, tuple):
             self.end = XY(end)
@@ -41,22 +37,24 @@ class Line():
             raise TypeError("What am I supposed to do with this? {} is type {}".format(start, type(start)))
 
     def __contains__(self, point):
-        #TODO poor form to overload a dunder like this?
         #TODO maybe this should handle both XY and Lines?
-        # would that be terrible? or Pythonic?
         ''' Check whether a point is on the line '''
         if not isinstance(point, XY):
+            #TODO distinguish between programming error and runtime errors
+            # don't raise exceptions on typos / bad code
             raise TypeError("Argument must be an XY object: {} is type {}".format(point, type(point)))
 
         # If point is one of the Line's vertices, we can't
         # calculate a slope
         if self.has_vertex(point):
-            #TODO It is curious how I sometimes feel I need to have
-            # the explicit else and sometimes not
             return True
 
-        #TODO Oh good. Checking for equality on floats. This
-        # can't possibly go wrong
+        # Make sure the point is inside the bounding box of the Line
+        #TODO make this remotely human-understandable
+        #TODO make sure negative numbers work
+        if not (point - self.start).fitsin(point - self.end):
+            return False
+
         # Using default args to math.isclose()
         return isclose(self.slope(), Line(self.start, point).slope())
 
@@ -79,40 +77,41 @@ class Line():
 
     def __len__(self):
         ''' The length of the line in pixels, rounded to the nearest integer '''
-        #TODO Are we OK with this staggered design?
+        #TODO don't overload len() with this
         return round(self.float_len())
 
     def __eq__(self, line):
         ''' Check whether the line is the same as another line, regardless of direction '''
+        #TODO just check equality between the two sets
         return not {self.start, self.end}.symmetric_difference({line.start, line.end})
 
     def xy_slope(self):
         ''' Return the slope of the Line as an XY object represenating
             rise over run '''
-        #TODO is this OK? essentially just aliasing
         return self.xy_len()
 
     def slope(self):
         ''' Return the slope of the Line (as a floating point number) '''
         rise, run = self.xy_slope().astuple()
 
-        #TODO is this how this is done?
         try:
             return rise / run
         except ZeroDivisionError:
-            # The slope of a vertical line is undefined but I think
-            # using infinity makes compares tighter
+            # Using infinity as the slope of the line instead of
+            # the correct undefined so I can compare the slopes of
+            # two lines
             return inf
 
     def split(self, vertex):
+        #TODO call vertex point
         ''' Split Line on vertex XY, returning two new Lines '''
         if vertex not in self:
-            #TODO KeyError real iffy here
+            #TODO not a KeyError, but leave to troll pedants
             raise KeyError("{} is not on Line {}".format(vertex, self))
 
         if vertex == self.start or vertex == self.end:
             # Zero-length Lines are not allowed
-            raise ValueError("Can't split a Line on one of its vertices: line={} vertex={}".format(self, vertex))
+            raise ValueError("Can't split a Line on one of its vertices: Line={} vertex={}".format(self, vertex))
 
         return Line(self.start, vertex), Line(self.end, vertex)
 
@@ -128,8 +127,8 @@ class Line():
         return bool({self.start, self.end}.intersection({line.start, line.end}))
 
     def astuples(self):
+        #TODO I can have underscores!
         ''' Return end points as a tuple of tuples (to use with PIL) '''
-        #TODO doesn't feel good.
         return (self.start.astuple(), self.end.astuple())
 
     def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_WIDTH):

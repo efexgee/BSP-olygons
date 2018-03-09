@@ -23,7 +23,7 @@ class Tree():
 
         # Store the dimensions of the root node since we'll be
         # deleting its Rectangle
-        #TODO reference 'rectangle' or 'self.root.rectangle'?
+        #TODO use self.rectagle (which doesn't exist here)
         self.canvas = Rectangle(rectangle.orig, rectangle.dims)
 
     def get(self, id):
@@ -60,7 +60,6 @@ class Tree():
                     new_edge_a = None
                     new_edge_b = None
 
-                    #TODO Creating an edge may warrant a method?
                     if new_line.issubset(edge_a.line):
                         new_edge_a = Edge(new_line, edge_a.node)
                         new_edges.append(new_edge_a)
@@ -87,7 +86,6 @@ class Tree():
         print("\n> Registering Edge {}".format(new_edge))
 
         if new_edge in self.registry:
-            #TODO I don't know if this is a hack/path or not :(
             print("{} already exists in registry".format(new_edge))
             return
 
@@ -104,12 +102,10 @@ class Tree():
                 new_edge.link(edge)
                 #print("self.registry={}\n".format(self.registry))
                 # going to assume there isn't another twin
-                #TODO how much checking for exception cases should I be doing?
                 return
 
             # check for overlapping segments
             if new_edge.overlaps(edge):
-                #TODO exploding an overlap changes the registry but we keep checking the loop
                 print("{} overlaps with {}".format(new_edge, edge))
 
                 assert edge.twin is None, "Edge should not have a twin: {}".format(edge)
@@ -127,7 +123,6 @@ class Tree():
                 print("Marked {} for removal from registry".format(edge))
 
                 print("Processing dovetails")
-                #TODO I'm running out of generic identifiers (edge, new_edge, etc.)
                 for dovetail_edge in dovetails:
                     #print("Processing dovetail {}".format(dovetail_edge))
                     if dovetail_edge.touches(edge.node):
@@ -159,7 +154,6 @@ class Tree():
         print("iffy_adds={}".format(iffy_adds))
 
         if not iffy_adds:
-            #TODO this is likely redundant but helps readability right now
             print("No iffy_adds. We're done.")
             return
 
@@ -188,7 +182,6 @@ verlaps with {}".format(new_edge, edge))
 
         print("\n=== Splitting id {}:{} {} (probably into Node {} and Node {})".format(id, cur, direction, self.max_id + 1, self.max_id + 2))
 
-        #TODO may be time to learn to implement exception handling
         # Check if node exist
         if cur is None:
             print("Could not find Node {}".format(id))
@@ -210,9 +203,6 @@ verlaps with {}".format(new_edge, edge))
                 direction = choice(("v", "h"))
 
         # Split the Rectangle in the matching direction
-        #TODO I once thought that I was glad I made separate splits on the
-        # Rectangle object, but I no longer remember why. It doesn't seem to
-        # fit with future diagonal split support
         if direction.startswith("v"):
             rect_a, rect_b = cur.rect.v_split()
         elif direction.startswith("h"):
@@ -221,16 +211,10 @@ verlaps with {}".format(new_edge, edge))
             print("Something went wrong. Direction has to start with 'v' or 'h' but is {}".format(direction))
             return
 
-        '''
-            Design Considerations
-                Would like to allow for diagonal splits
-        '''
-
         #                add Edges to tree's Edge registry
 
 
         # Remove Node's Rectangle
-        #TODO what is the good way to delete/remove/blank things in objects?
         cur.rect = None
 
         print("Cleaning up edges of {}".format(cur))
@@ -260,8 +244,6 @@ verlaps with {}".format(new_edge, edge))
 
         for edge in self.registry:
             if node in edge:
-            #TODO using touches would change the logic in the twin handling
-            #if edge.touches(node):
                 if edge.twin:
                     edge.twin.twin = None
                 nodes_edges.append(edge)

@@ -6,7 +6,7 @@ class Node():
     def __init__(self, id, parent, rectangle, child_a=None, child_b=None):
         self.id = id
 
-        #TODO I don't think we ever use the parent pointer but
+        #I don't think we ever use the parent pointer but
         # it doesn't cost much and can be super-useful
         self.parent = parent
         self.a = child_a
@@ -18,10 +18,8 @@ class Node():
     def centroid(self):
         ''' Return the centroid of a Node (floor division)
         Node.centroid -> XY object '''
-        #TODO should centroid be on Node or Rectangle?
-        #TODO are convenience wrapper methods a thing? i.e.
-        # Node.centroid() just calls Node.Rectangle.centroid()?
 
+        #TODO this should be calling rect.centroid()
         return self.rect.orig + self.rect.dims // 2
 
     def __repr__(self):

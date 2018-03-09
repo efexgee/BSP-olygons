@@ -3,6 +3,13 @@
 from PIL import Image, ImageDraw
 from line import *
 
+#TODO inherit from Line
+# .split() would be like Edge.split() but it
+# would call super().split()
+
+#TODO should Edge be "immutable"?
+# use read-only properties
+
 class Edge():
     ''' a Line and two Nodes '''
 
@@ -13,25 +20,19 @@ class Edge():
         self.node_a = node_a    # should only be changed via replace()
         self.node_b = node_b    # should only be changed via replace()
 
-    def __eq__(self, edge):
-        #TODO does having to implement this mean I did something wrong?
-        #No longer used, but question stands
-        pass
-
     def describes(self, node):
         ''' Check whether Edge is part of a Node '''
-        #TODO ORs like this seem weird. Is there something like
-        # node == foo or bar, or maybe node in [foo, bar] would be
-        # good?
         return node == self.node_a or node == self.node_b
 
     def split(self, point):
         ''' Split Edge at point XY and return two new Edges
             which have the same associated Nodes '''
-        #TODO would maybe be cool to change the exceptions raised
-        #by Line to say "Can't ... Edge .." instead of Line?
-        #TODO am I supposed to use 'try' here and re-raise something?
-        line_a, line_b = edge.line.split(point)
+        try:
+            line_a, line_b = edge.line.split(point)
+        except KeyError:
+            raise KeyError(f"{point} is not on {edge}")
+        except ValueError as e:
+            raise ValueError(e.message.replace("Line", "Edge"))
 
         edge_a = Edge(line_a, edge.node_a, edge.node_b)
         edge_b = Edge(line_b, edge.node_a, edge.node_b)
@@ -40,7 +41,6 @@ class Edge():
 
     def has_vertex(self, vertex):
         ''' Check whether Edge has XY as one of its vertices '''
-        #TODO so, how do I catch this exception? try/raise?
         return self.line.has_vertex(vertex)
 
     def replace(self, old_node, new_node):
@@ -48,19 +48,16 @@ class Edge():
             This the only way Edges' Nodes should be
             changed '''
         if self.node_a == old_node:
-            #TODO feel dumb about if A then A, if B then B
             self.node_a = new_node
-        elif self.node_b == new_node:
+        elif self.node_b == old_node:
             self.node_b = new_node
         else:
-            #TODO OK to use KeyError here?
+            #TODO custom exception or ValueError as last resort
             raise KeyError("{} not attached to {}".format(old_node, self))
 
     def add_to_draw(self, draw, color=None, width=None):
         ''' Add Edge to the specified PIL draw object '''
-        #TODO passing None is not the same as using defaults
-        #so need to pass nothing in case of None. awkward
-        #How do I do that?
+        #TODO self.line.add_to_draw(**{arg: val})
 
         self.line.add_to_draw(draw)
         #TODO label with the two nodes
