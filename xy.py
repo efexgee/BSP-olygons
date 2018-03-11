@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
+from PIL import Image, ImageDraw
+
 class XY():
     ''' a pair of x and y values which represent either a
-        coordinate or a lengths in the x and y axes, which
-        supports addition and subtraction '''
+        coordinate or a lengths in the x and y axes '''
+
+    _DEFAULT_COLOR = "black"
+    _DEFAULT_BACKGROUND_COLOR = "white"
 
     #TODO try to implement iterator so XY can be used as a tuple
 
@@ -14,8 +18,7 @@ class XY():
         # or catch exception on index
         # *var on call unpacks the doodad (WWAD)
         if isinstance(x, tuple):
-            self.x = x[0]
-            self.y = x[1]
+            self.x, self.y = x
         elif isinstance(x, int):
             self.x = x
 
@@ -24,7 +27,7 @@ class XY():
             else:
                 self.y = y
         else:
-            raise TypeError("Arguments aren't int or tuple: x={} y={}".format(x, y))
+            raise TypeError(f"Arguments aren't int or tuple: x={x} y={y}")
 
     @property
     def x(self):
@@ -33,7 +36,7 @@ class XY():
     @x.setter
     def x(self, value):
         if not isinstance(value, int):
-            raise TypeError("value is not an integer: {}".format(value))
+            raise TypeError(f"Value is not an integer: {value}")
         #TODO I can't ensure positive values if I'm going to use
         # XY to represent offsets / slopes
         #if not value >= 0:
@@ -47,9 +50,7 @@ class XY():
     @y.setter
     def y(self, value):
         if not isinstance(value, int):
-            raise TypeError("value is not an integer: {}".format(value))
-        #if not value >= 0:
-            #raise ValueError("value is not positive: {}".format(value))
+            raise TypeError(f"Value is not an integer: {value}")
         self._y = value
 
     def __add__(self, value):
@@ -76,19 +77,18 @@ class XY():
         elif isinstance(value, int):
             return XY(self.x // value, self.y // value)
 
-    def __eq__(self, value):
-        if self.x == value.x and self.y == value.y:
+    def __eq__(self, xy):
+        if self.x == xy.x and self.y == xy.y:
             return True
         else:
             return False
 
-    def fitsin(self, value):
-        #TODO rename 'value' on all these
+    def fitsin(self, xy):
         #TODO shouldn't be a method at all, as this name/concept
-        # Both x and y are greater than value's x and y
-        # i.e. a rectangle with dimensions 'value' could
+        # Both x and y are greater than xy's x and y
+        # i.e. a rectangle with dimensions 'xy' could
         # fit inside a rectangle with our dimensions
-        if self.x < value.x and self.y < value.y:
+        if self.x < xy.x and self.y < xy.y:
             return True
         else:
             return False
@@ -96,25 +96,52 @@ class XY():
     def __hash__(self):
         #TODO probably no point to having a hash since I can't use
         # this as a key
-        return hash(self.astuple())
+        return hash(self.as_tuple())
 
-    def __gt__(self, value):
+    def __gt__(self, xy):
+        return self.x > xy.x and self.y > xy.y
+
+    '''
+    def __gt__(self, xy):
         # compare the non-equal dimensions
         # A > B if A and B are on the same vertical or horizontal
         # line and A is further from the origin than B
-        if self.x == value.x:
-            return self.y > value.y
-        elif self.y == value.y:
-            return self.x > value.x
+        if self.x == xy.x:
+            return self.y > xy.y
+        elif self.y == xy.y:
+            return self.x > xy.x
         else:
             #TODO this should not be a warning-exception
-            raise UserWarning("Shared axis required to order XY objects: {} and {}".format(self, value))
+            raise UserWarning("Shared axis required to order XY objects: {} and {}".format(self, xy))
+    '''
 
-    def __ge__(self, value):
-        return self > value or self == value
+    def __ge__(self, xy):
+        ''' Greater than or equal to ( >= ) '''
+        return self.x >= xy.x and self.y >= xy.y
 
-    def astuple(self):
+    def __abs__(self):
+        ''' Return absolute value of XY '''
+        #TODO Not used currently
+        return XY(abs(self.x), abs(self.y))
+
+    def as_tuple(self):
         return (self.x, self.y)
 
+    def add_to_draw(self, draw, color=_DEFAULT_COLOR):
+        ''' Add a point at XY to a PIL draw object '''
+        draw.point(self.as_tuple(), fill=color)
+
+    def show(self, canvas_size, color=_DEFAULT_COLOR):
+        ''' Show a point at XY '''
+        img_size = canvas_size
+
+        img = Image.new("RGBA", img_size.as_tuple(), XY._DEFAULT_BACKGROUND_COLOR)
+
+        draw = ImageDraw.Draw(img)
+
+        self.add_to_draw(draw)
+
+        img.show()
+
     def __repr__(self):
-        return "({},{})".format(self.x, self.y)
+        return f"({self.x},{self.y})"
