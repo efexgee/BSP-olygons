@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
+from collections import UserList
 from rectree_edge import *
 
-#TODO use UserList
-class EdgeRegistry(list):
-    ''' A list of Edges that can be addressed by their Lines '''
+class EdgeRegistry(UserList):
+    ''' A list of Edges that can be addressed by their LineSegments '''
 
     _DEFAULT_BACKGROUND_COLOR = "white"
 
     def get_canvas_size(self):
-        ''' Return image size required to display all Lines '''
+        ''' Return image size required to display all LineSegments '''
 
         if not self:
             return XY(0)
@@ -24,8 +24,8 @@ class EdgeRegistry(list):
 
         return XY(max(x), max(y))
 
-    def get_edge_by_line(self, line):
-        ''' Return the Edge which contains a Line '''
+    def _get_edge_by_line(self, line):
+        ''' [Helper for .get_edge()] Return the Edge which contains a LineSegment '''
         result = None
 
         for edge in self:
@@ -33,14 +33,14 @@ class EdgeRegistry(list):
                 if not result:
                     result = edge
                 else:
-                    raise UserWarning("Found another match for {} in {}: {}".format(line, self, edge))
+                    raise UserWarning(f"Found another match for {line} in {self}: {edge}")
         if result:
             return result
         else:
-            raise KeyError("Line {} is not in {}".format(line, self))
+            raise KeyError(f"LineSegment {line} is not in {self}")
 
-    def get_edges_by_vertex(self, vertex):
-        ''' Return all Edges which contain the vertex '''
+    def _get_edges_by_vertex(self, vertex):
+        ''' [Helper for .get_edges()] Return all Edges which contain the vertex '''
         edges = []
 
         for edge in self:
@@ -50,10 +50,10 @@ class EdgeRegistry(list):
         if edges:
             return result
         else:
-            raise KeyError("Vertex {} is not in {}".format(vertex, self))
+            raise KeyError(f"Vertex {vertex} is not in {self}")
 
-    def get_edges_by_node(self, node):
-        ''' Return the Edges which contain the Node '''
+    def _get_edges_by_node(self, node):
+        ''' [Helper for .get_edges()] Return the Edges which contain the Node '''
         edges = []
 
         for edge in self:
@@ -63,18 +63,25 @@ class EdgeRegistry(list):
         if edges:
             return result
         else:
-            raise KeyError("Node {} is not in {}".format(node, self))
+            raise KeyError(f"Node {node} is not in {self}")
 
     def get_edge(self, value):
-        ''' Return the Edge which contains a Line or vertex '''
-        # This is toast but I like the question
-        #TODO why is this toast? privatize the dispatchees
+        ''' Return the Edge which contains a LineSegment or vertex '''
+        # This dispatch method allows for additional supported types
+        # but I don't know what those would be
         if isinstance(value, line):
-            return self.get_edge_by_line(value)
-        elif isinstance(value, XY):
-            return self.get_edge_by_vertex(value)
+            return self._get_edge_by_line(value)
         else:
-            raise TypeError("Can't find an Edge based on {}: {}".format(type(value), value))
+            raise TypeError(f"Can't retrieve an Edge based on type of {value}: {type(value)}")
+
+    def get_edges(self, value):
+        ''' Return a list of Edges which contain a vertex or a Node '''
+        if isinstance(value, Node):
+            return self._get_edges_by_node(value)
+        elif isinstance(value, XY):
+            return self._get_edges_by_vertex(value)
+        else:
+            raise TypeError(f"Can't retrieve Edges based on type of {value}: {type(value)}")
 
     def add_node_to_draw(self, node, draw):
         ''' Add the polygon for a Node to a PIL draw object '''
@@ -90,7 +97,7 @@ class EdgeRegistry(list):
             #TODO this is a debugging error, maybe an assertion then
             raise UserWarning("Not drawing a zero-size image")
 
-        img = Image.new("RGBA", img_size.astuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
+        img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
 
         draw = ImageDraw.Draw(img)
 
@@ -99,8 +106,7 @@ class EdgeRegistry(list):
         img.show()
 
     def __contains__(self, line):
-        #TODO in English, please
-        ''' Check whether Line is any of the Edges '''
+        ''' Check whether LineSegment is in any of the Edges of the registry '''
         found = False
 
         for edge in self:
@@ -108,5 +114,5 @@ class EdgeRegistry(list):
                 if not found:
                     found = True
                 else:
-                    raise UserWarning("Found another match for {} in {}: {}".format(line, self, edge))
+                    raise UserWarning(f"Found another match for {line} in {self}: {edge}")
         return found

@@ -37,13 +37,13 @@ big_box.add_to_draw(pic)
 # Rectangle trees
 boxwood = Tree(big_box)
 
-# Lines
-la = Line(ten, (10,50))
-lb = Line((10,50), fifty)
-lc = Line(hundred, (10,100))
-ld = Line((75,100), (20,100))
-le = Line(fifty, (50,75))
-lf = Line((80,100), (120,100))
+# LineSegments
+la = LineSegment(ten, (10,50))
+lb = LineSegment((10,50), fifty)
+lc = LineSegment(hundred, (10,100))
+ld = LineSegment((75,100), (20,100))
+le = LineSegment(fifty, (50,75))
+lf = LineSegment((80,100), (120,100))
 
 lines = (la, lb, lc, ld, le, lf)
 

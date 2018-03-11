@@ -3,7 +3,7 @@
 from PIL import Image, ImageDraw
 from line import *
 
-#TODO inherit from Line
+#TODO inherit from LineSegment
 # .split() would be like Edge.split() but it
 # would call super().split()
 
@@ -11,7 +11,7 @@ from line import *
 # use read-only properties
 
 class Edge():
-    ''' a Line and two Nodes '''
+    ''' a LineSegment and two Nodes '''
 
     def __init__(self, line, node_a, node_b):
         # Asking the user to explicitly specify None in the
@@ -32,7 +32,7 @@ class Edge():
         except KeyError:
             raise KeyError(f"{point} is not on {edge}")
         except ValueError as e:
-            raise ValueError(e.message.replace("Line", "Edge"))
+            raise ValueError(e.message.replace("LineSegment", "Edge"))
 
         edge_a = Edge(line_a, edge.node_a, edge.node_b)
         edge_b = Edge(line_b, edge.node_a, edge.node_b)
@@ -53,7 +53,7 @@ class Edge():
             self.node_b = new_node
         else:
             #TODO custom exception or ValueError as last resort
-            raise KeyError("{} not attached to {}".format(old_node, self))
+            raise KeyError(f"{old_node} not attached to {self}")
 
     def add_to_draw(self, draw, color=None, width=None):
         ''' Add Edge to the specified PIL draw object '''
@@ -64,10 +64,10 @@ class Edge():
         # This is going to be a bit of a to-do
 
     def show(self):
-        ''' Show the Line of the Edge '''
+        ''' Show the LineSegment of the Edge '''
         img_size = self.line.get_canvas_size()
 
-        img = Image.new("RGBA", img_size.astuple(), Line._DEFAULT_BACKGROUND_COLOR)
+        img = Image.new("RGBA", img_size.as_tuple(), LineSegment._DEFAULT_BACKGROUND_COLOR)
 
         draw = ImageDraw.Draw(img)
 
@@ -76,4 +76,4 @@ class Edge():
         img.show()
 
     def __repr__(self):
-        return "{}: {}, {}".format(self.line, self.node_a, self.node_b)
+        return f"{self.line}: {self.node_a}, {self.node_b}"

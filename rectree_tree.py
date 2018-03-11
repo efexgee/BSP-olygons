@@ -56,7 +56,7 @@ class Tree():
             for vertex in sorted(set([edge_a.line.start, edge_a.line.end, edge_b.line.start, edge_b.line.end])):
                 # if this is our second vertex, we can start making lines
                 if last_vertex:
-                    new_line = Line(last_vertex, vertex)
+                    new_line = LineSegment(last_vertex, vertex)
                     new_edge_a = None
                     new_edge_b = None
 
@@ -73,14 +73,12 @@ class Tree():
 
                 last_vertex = vertex
 
-            #print("Returning new segment(s): {}".format(new_segments))
             return new_edges
 
 
         for line in self.canvas.get_edges():
             if new_edge.line.issubset(line):
                 # not storing edges on the border because they can't be shared edges
-                #print("Discarding {} because it's on the border".format(new_edge))
                 return
 
         print("\n> Registering Edge {}".format(new_edge))
@@ -100,7 +98,6 @@ class Tree():
                 print("Twinning {} with {} in registry".format(new_edge, edge))
                 self.registry.append(new_edge)
                 new_edge.link(edge)
-                #print("self.registry={}\n".format(self.registry))
                 # going to assume there isn't another twin
                 return
 
@@ -118,7 +115,6 @@ class Tree():
                 # delete the overlapped line
                 # we know that this edge can't have a twin
                 #self.registry.remove(edge)
-                #print("Removed edge {} from registry".format(edge))
                 removals.append(edge)
                 print("Marked {} for removal from registry".format(edge))
 
@@ -265,7 +261,7 @@ verlaps with {}".format(new_edge, edge))
     def show(self):
         img_size = self.canvas.dims + 1
 
-        img = Image.new("RGBA", img_size.astuple(), "black")
+        img = Image.new("RGBA", img_size.as_tuple(), "black")
 
         draw = ImageDraw.Draw(img)
 
@@ -274,16 +270,16 @@ verlaps with {}".format(new_edge, edge))
         for edge in self.registry:
             # All Edges are pink
             # Color all Edges tracked in the registry in green
-            draw.line(edge.line.astuples(), fill="red", width=4)
+            draw.line(edge.line.as_tuples(), fill="red", width=4)
 
             if edge.twin is not None:
                 # Color all shared Edges blue
-                draw.line(edge.line.astuples(), fill="lightgreen", width=2)
+                draw.line(edge.line.as_tuples(), fill="lightgreen", width=2)
                 # Connect the centroids of adjacent Rectangles
                 #print("Drawing line across edge {}".format(edge))
                 centroid_a = edge.node.centroid()
                 centroid_b = edge.twin.node.centroid()
-                draw.line((centroid_a.astuple(), centroid_b.astuple()), fill="black")
+                draw.line((centroid_a.as_tuple(), centroid_b.as_tuple()), fill="black")
 
         img.show()
 

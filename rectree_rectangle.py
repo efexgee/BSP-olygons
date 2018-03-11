@@ -76,7 +76,7 @@ class Rectangle():
 
         img_size = self.orig + self.dims + 1
 
-        img = Image.new("RGBA", img_size.astuple(), "black")
+        img = Image.new("RGBA", img_size.as_tuple(), "black")
 
         draw = ImageDraw.Draw(img)
 
@@ -85,8 +85,8 @@ class Rectangle():
         img.show()
 
     def add_to_draw(self, draw):
-        top_left = self.orig.astuple()
-        bottom_right = (self.orig + self.dims).astuple()
+        top_left = self.orig.as_tuple()
+        bottom_right = (self.orig + self.dims).as_tuple()
 
         if self._border:
             border = self._border_color
@@ -105,7 +105,7 @@ class Rectangle():
             if label_size.fitsin(self.dims):
                 label_origin = self.orig + self.dims // 2 - label_size // 2
 
-                draw.text(label_origin.astuple(), label, fill=Rectangle._DEFAULT_TEXT)
+                draw.text(label_origin.as_tuple(), label, fill=Rectangle._DEFAULT_TEXT)
 
     def __repr__(self):
-        return "Rectangle({}, {}, {}, {}, {})".format(self.orig, self.dims, self.label, self.color, self._border)
+        return f"Rectangle({self.orig}, {self.dims}, {self.label}, {self.color}, {self._border})"

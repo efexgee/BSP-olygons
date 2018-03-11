@@ -44,4 +44,4 @@ class Node():
 
         #return "{} - p: ({}) a: ({}) b: ({}) rect: {}".format(self.id, parent, a, b, self.rect)
         #DEBUG - for readability
-        return "Node {}".format(self.id)
+        return f"Node {self.id}"
