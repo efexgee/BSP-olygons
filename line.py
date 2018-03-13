@@ -16,23 +16,25 @@ class LineSegment():
 
     _ISCLOSE_REL_TOLERANCE = 0.1  # 10% relative tolerance
 
-    def __init__(self, start, end):
-        if start == end:
-            raise ValueError(f"Won't create zero-length LineSegment: {start} {end}")
-
-        if isinstance(start, tuple):
-            self.start = XY(start)
-        elif isinstance(start, XY):
-            self.start = start
+    def __init__(self, _tail, _head):
+        if isinstance(_tail, tuple):
+            self._tail = XY(_tail)
+        elif isinstance(_tail, XY):
+            self._tail = _tail
         else:
-            raise TypeError(f"What am I supposed to do with this? {start} is type {type(start)}")
+            raise TypeError(f"Start must be an XY object or a tuple. {_tail} is type {type(_tail)}")
 
-        if isinstance(end, tuple):
-            self.end = XY(end)
-        elif isinstance(end, XY):
-            self.end = end
+        if isinstance(_head, tuple):
+            self._head = XY(_head)
+        elif isinstance(_head, XY):
+            self._head = _head
         else:
-            raise TypeError("What am I supposed to do with this? {} is type {}".format(start, type(start)))
+            raise TypeError(f"End must be an XY object or a tuple. {_head} is type {type(_head)}")
+
+        # Check after handling types to support mixed types for _tail
+        # and _head
+        if self._tail == self._head:
+            raise ValueError(f"Won't create zero-length LineSegment: {_tail} {_head}")
 
     def __contains__(self, point):
         #TODO maybe this should handle both XY and LineSegments?
@@ -41,7 +43,7 @@ class LineSegment():
         if not isinstance(point, XY):
             #TODO distinguish between programming error and runtime errors
             # don't raise exceptions on typos / bad code
-            raise TypeError("Argument must be an XY object: {} is type {}".format(point, type(point)))
+            raise TypeError("Point must be an XY object: {point} is type {type(point)}")
 
         # If point is one of the LineSegment's vertices, we can't
         # calculate a slope
@@ -50,20 +52,20 @@ class LineSegment():
 
         # Make sure the point is inside the bounding box of the LineSegment
         box = self.bounding_box()
-        if not box.start <= point <= box.end:
+        if not box._tail <= point <= box._head:
             return False
 
         print("Warning: the __contains__ is very imprecise beyond this point")
 
         self_slope = self.slope()
-        point_slope = LineSegment(self.start, point).slope()
+        point_slope = LineSegment(self._tail, point).slope()
 
-        return isclose(self.slope(), LineSegment(self.start, point).slope(), rel_tol=LineSegment._ISCLOSE_REL_TOLERANCE)
+        return isclose(self.slope(), LineSegment(self._tail, point).slope(), rel_tol=LineSegment._ISCLOSE_REL_TOLERANCE)
 
     def xy_len(self):
         ''' Return the length of the LineSegment as an XY object representing
             rise over run '''
-        offset = self.end - self.start
+        offset = self._head - self._tail
 
         # If the run is negative, convert the slope
         if offset.x < 0:
@@ -80,8 +82,8 @@ class LineSegment():
     def bounding_box(self):
         ''' Return the bounding box of the LineSegment as a LineSegment representing
             the upper left and lower right points of the box '''
-        upper_left = XY(min(self.start.x, self.end.x), min(self.start.y, self.end.y))
-        lower_right = XY(max(self.start.x, self.end.x), max(self.start.y, self.end.y))
+        upper_left = XY(min(self._tail.x, self._head.x), min(self._tail.y, self._head.y))
+        lower_right = XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y))
         return LineSegment(upper_left, lower_right)
 
     def length(self):
@@ -90,7 +92,7 @@ class LineSegment():
 
     def __eq__(self, line):
         ''' Check whether the LineSegment is the same as another LineSegment, regardless of direction '''
-        return {self.start, self.end} == {line.start, line.end}
+        return {self._tail, self._head} == {line._tail, line._head}
 
     def xy_slope(self):
         ''' Return the slope of the LineSegment as an XY object represenating
@@ -115,27 +117,27 @@ class LineSegment():
             #TODO not a KeyError, but leave to troll pedants
             raise KeyError("{point} is not on LineSegment {self}")
 
-        if point == self.start or point == self.end:
+        if point == self._tail or point == self._head:
             # Zero-length LineSegments are not allowed
-            raise ValueError("Can't split a LineSegment on one of its vertices: LineSegment={self} point={point}".format(self, point))
+            raise ValueError("Can't split a LineSegment on one of its vertices: LineSegment={self} point={point}")
 
-        return LineSegment(self.start, point), LineSegment(self.end, point)
+        return LineSegment(self._tail, point), LineSegment(self._head, point)
 
     def has_vertex(self, vertex):
         ''' Check whether XY is one of LineSegment's vertices '''
-        return vertex in (self.start, self.end)
+        return vertex in (self._tail, self._head)
 
     def shares_vertex(self, line):
-        ''' Check whether the LineSegments share an end point '''
+        ''' Check whether the LineSegments share an _head point '''
         #TODO probably won't be used
         # this does not check for "touching" because that would include
         # adjacent vertices (LineSegments of length 1)
         #TODO what's a better way to write this?
-        return bool({self.start, self.end}.intersection({line.start, line.end}))
+        return bool({self._tail, self._head}.intersection({line._tail, line._head}))
 
     def as_tuples(self):
-        ''' Return end points as a tuple of tuples (to use with PIL) '''
-        return (self.start.as_tuple(), self.end.as_tuple())
+        ''' Return _head points as a tuple of tuples (to use with PIL) '''
+        return (self._tail.as_tuple(), self._head.as_tuple())
 
     def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_WIDTH):
         ''' Draw the LineSegment on a provided PIL draw object '''
@@ -143,11 +145,13 @@ class LineSegment():
 
     def get_canvas_size(self):
         ''' Provide dimensions required to display LineSegment '''
+        #TODO user bounding_box?
+        #TODO don't support edge.show this way
         # This is broken out from .show() to allow Edge.show()
-        return XY(max(self.start.x, self.end.x), max(self.start.y, self.end.y)) + LineSegment._CANVAS_PADDING
+        return XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y)) + LineSegment._CANVAS_PADDING
 
     def show(self):
-        ''' Show the LineSegment '''
+        ''' Display the LineSegment '''
         img_size = self.get_canvas_size()
 
         img = Image.new("RGBA", img_size.as_tuple(), LineSegment._DEFAULT_BACKGROUND_COLOR)
@@ -159,8 +163,8 @@ class LineSegment():
         img.show()
 
     def __repr__(self):
-        return "{self.start}-{self.end}"
+        return f"{self._tail}-{self._head}"
 
     def __hash__(self):
         # Hash based on a tuple of the two values
-        return hash((self.start, self.end))
+        return hash((self._tail, self._head))

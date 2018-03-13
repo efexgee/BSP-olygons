@@ -12,12 +12,14 @@ class Tree():
     ''' a binary tree of Rectangles '''
 
     def __init__(self, rectangle):
+        #TODO have __init__ call add_node()?
         self.root = Node(0, None, rectangle)
         # the highest ID currently in the tree
         self.max_id = 0
 
         # A registry of all Edges in the Tree
-        self.registry = []
+        #TODO put root edges in there
+        self.registry = EdgeRegistry()
         for line in self.root.rect.get_edges():
             self.registry.append(Edge(line, self.root))
 
@@ -28,6 +30,7 @@ class Tree():
 
     def get(self, id):
         ''' return the Node with the specified id '''
+        #TODO what happens if the node doesn't exist?
         def walk(cur, id):
             if cur is None:
                 return
@@ -44,221 +47,72 @@ class Tree():
 
         return walk(self.root, id)
 
-    def register_edge(self, new_edge):
-        ''' add a new line to the registry, making the appropriate changes '''
-        def dovetail(edge_a, edge_b):
-            print("\n>> Dovetailing edges {} and {}".format(edge_a, edge_b))
-
-            last_vertex = None
-            new_edges = []
-
-            # remove duplicates so we don't get 0-length lines
-            for vertex in sorted(set([edge_a.line.start, edge_a.line.end, edge_b.line.start, edge_b.line.end])):
-                # if this is our second vertex, we can start making lines
-                if last_vertex:
-                    new_line = LineSegment(last_vertex, vertex)
-                    new_edge_a = None
-                    new_edge_b = None
-
-                    if new_line.issubset(edge_a.line):
-                        new_edge_a = Edge(new_line, edge_a.node)
-                        new_edges.append(new_edge_a)
-                    if new_line.issubset(edge_b.line):
-                        new_edge_b = Edge(new_line, edge_b.node)
-                        new_edges.append(new_edge_b)
-
-                    if new_edge_a and new_edge_b:
-                        print("Cross-linking {} and {}".format(new_edge_a, new_edge_b))
-                        new_edge_a.link(new_edge_b)
-
-                last_vertex = vertex
-
-            return new_edges
-
-
-        for line in self.canvas.get_edges():
-            if new_edge.line.issubset(line):
-                # not storing edges on the border because they can't be shared edges
-                return
-
-        print("\n> Registering Edge {}".format(new_edge))
-
-        if new_edge in self.registry:
-            print("{} already exists in registry".format(new_edge))
-            return
-
-        safe_adds = []
-        iffy_adds = []
-        removals = []
-
-        for edge in self.registry:
-            # if the registry has a twin for this Edge, link them, and we're done
-            if new_edge.twins(edge):
-                # going to assume it's not already linked
-                print("Twinning {} with {} in registry".format(new_edge, edge))
-                self.registry.append(new_edge)
-                new_edge.link(edge)
-                # going to assume there isn't another twin
-                return
-
-            # check for overlapping segments
-            if new_edge.overlaps(edge):
-                print("{} overlaps with {}".format(new_edge, edge))
-
-                assert edge.twin is None, "Edge should not have a twin: {}".format(edge)
-
-                new_node = new_edge.node
-                overlap_node = edge.node
-
-                dovetails = dovetail(new_edge, edge)
-
-                # delete the overlapped line
-                # we know that this edge can't have a twin
-                #self.registry.remove(edge)
-                removals.append(edge)
-                print("Marked {} for removal from registry".format(edge))
-
-                print("Processing dovetails")
-                for dovetail_edge in dovetails:
-                    #print("Processing dovetail {}".format(dovetail_edge))
-                    if dovetail_edge.touches(edge.node):
-                        #any segment associated with the old node can be added safely
-                        # because this segment can't have overlapped a line previously
-                        safe_adds.append(dovetail_edge)
-                        print("{} is safe to add".format(dovetail_edge))
-                    else:
-                        #this segment still needs to be added correctly
-                        iffy_adds.append(dovetail_edge)
-                        print("{} requires care".format(dovetail_edge))
-
-        # End of the for loop over existing segments
-        print("End of loop for {}".format(new_edge))
-
-        for deado in removals:
-            self.registry.remove(deado)
-            print("Removed edge {} from registry".format(deado))
-
-        # if we had no overlaps, just plain add the new line, and we're done
-        if not safe_adds:
-            self.registry.append(new_edge)
-            print("Added {} to registry".format(new_edge))
-            return
-
-        self.registry += safe_adds
-        print("Added safe_adds to registry")
-
-        print("iffy_adds={}".format(iffy_adds))
-
-        if not iffy_adds:
-            print("No iffy_adds. We're done.")
-            return
-
-        for iffy_add in iffy_adds:
-            print("\n>>> Calling myself on {}".format(iffy_add))
-            self.register_edge(iffy_add)
-
-        '''
-verlaps with {}".format(new_edge, edge))
-
-        At this point:
-            - we weren't trying to add a border edge
-            - we did not find a twin
-            - we did a plain add if we had no overlaps
-            - we have exploded all the overlaps
-            - any overlapped edges have been deleted
-            - safe_adds have been added to replace the overlapped edges
-            - new_edge no longer matters
-            - iffy_adds need to be handle appropriately
-                + iffy_adds contains 0 - 2 edges (I think)
-        '''
-
-    
-    def split(self, id, direction=None):
+    def split(self, id, direction=None, location=50):
+        ''' Split a Node into two Nodes, in direction, at percentage.
+            Default direction is to split across the shorter
+            dimension (random for squares), and at 50%. '''
         cur = self.get(id)
 
-        print("\n=== Splitting id {}:{} {} (probably into Node {} and Node {})".format(id, cur, direction, self.max_id + 1, self.max_id + 2))
+        print(f"\n=== Splitting id {id}:{cur} {direction} (probably into Node {self.max_id + 1} and Node {self.max_id + 2})")
 
         # Check if node exist
+        #TODO should this be handled by .get()?
         if cur is None:
-            print("Could not find Node {}".format(id))
+            #TODO IndexError?
+            raise IndexError(f"Could not find Node {id}")
             return
 
         # Check if node is a leaf node
         if not ( cur.a is None and cur.b is None ):
-            print("You can only split leaf nodes. This node has children: {}".format(cur))
-            return
+            #TODO maybe this implicitly checks whether the Node exists?
+            raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {cur}")
 
-        # If no direction is specified, split across the short dimension or
-        # split randomly if it's a square
+        # Set default direction and check for valid direction
         if direction is None:
+            # If no direction is specified, split across the short dimension or
+            # split randomly if it's a square
             if cur.rect.dims.x > cur.rect.dims.y:
                 direction = "v"
             elif cur.rect.dims.x < cur.rect.dims.y:
                 direction = "h"
             else:
                 direction = choice(("v", "h"))
+        elif not direction.startswith(("v", "h")):
+            raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
-        # Split the Rectangle in the matching direction
-        if direction.startswith("v"):
-            rect_a, rect_b = cur.rect.v_split()
-        elif direction.startswith("h"):
-            rect_a, rect_b = cur.rect.h_split()
-        else:
-            print("Something went wrong. Direction has to start with 'v' or 'h' but is {}".format(direction))
-            return
+        # Tell the Node to split
+        node_a, node_b = cur.split(direction, location)
 
-        #                add Edges to tree's Edge registry
+        self.add_node(cur, node_a)
+        self.add_node(cur, node_b)
 
-
-        # Remove Node's Rectangle
-        cur.rect = None
-
-        print("Cleaning up edges of {}".format(cur))
-
-        # Remove Node from Edges in the Tree's registry
-        self.reg_del(cur)
-        
-        # A method would keep Node agnostic of Tree's ID scheme
-        cur.a = self.add_node(cur, rect_a)
-        cur.b = self.add_node(cur, rect_b)
-
-        return cur.a, cur.b
-
-    def add_node(self, parent, rectangle):
+    def add_node(self, parent, node):
+        ''' Add a Node to the Tree under parent'''
         self.max_id += 1
 
-        new_node = Node(self.max_id, parent, rectangle)
+        if parent.child_a is None:
+            parent.child_a = node
+        elif parent.child_b is None:
+            parent.child_b = node
+        else:
+            raise RuntimeError(f"Can't add to full Node: {parent}")
 
-        # Add the edges to the Tree's registry
-        for line in new_node.rect.get_edges():
-            self.register_edge(Edge(line, new_node))
-
-        return new_node
-
-    def reg_del(self, node):
-        nodes_edges = []
-
-        for edge in self.registry:
-            if node in edge:
-                if edge.twin:
-                    edge.twin.twin = None
-                nodes_edges.append(edge)
-
-        for edge in nodes_edges:
-            self.registry.remove(edge)
+        #TODO deal with edges
 
     def leaves(self, start_id=0):
-    # This only shows the id, not the rectangles
+        ''' List the ids of all the leaf Nodes in the Treer
+            below Node start_id. (Default is the root Node) '''
+        # This only shows the id, not the rectangles
         def walk(node):
             if node.a is None and node.b is None:
                 return [node.id]
             else:
                 return walk(node.a) + walk(node.b)
 
-        #return set(walk(self.root))
         return set(walk(self.get(start_id)))
 
     def show(self):
+        ''' Display the Tree '''
         img_size = self.canvas.dims + 1
 
         img = Image.new("RGBA", img_size.as_tuple(), "black")
@@ -284,6 +138,7 @@ verlaps with {}".format(new_edge, edge))
         img.show()
 
     def add_to_draw(self, draw):
+        ''' Draw the Tree onto a provided PIL Draw object '''
         def draw_all(cur):
             if cur is None:
                 return
@@ -297,7 +152,8 @@ verlaps with {}".format(new_edge, edge))
         draw_all(self.root)
 
     def __repr__(self):
-    # This only shows the id, not the rectangles
+        #TODO Use Cody's __repr__ for this
+        # This only shows the id, not the rectangles
 
         #DEBUG - print a blank like to make output OK in iPython
         print("\n") #for ipython

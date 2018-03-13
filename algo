@@ -1,0 +1,32 @@
+What is splitting?
+    tree.split
+        in: node_id, direction, location
+        out: 2 node_ids
+        - find the node
+        - tell node to split
+            (direction, location)
+        - get 2 new nodes
+        - add nodes as children to original node (in the tree)
+        ? edges need to be updated
+    node.split
+        in: direction, location
+        out: 2 nodes
+        - get the 2 affected edges
+        - calculate the 2 split points
+        - determine new nodes' IDs
+        - tell those edges to split
+        - get 4 new edges
+        - add 4 new edges to the registry
+        - update all affected edges in the registry
+    edge.split
+        in: point
+        out: 2 edges
+        - get the line
+        - tell the line to split
+        - get two new lines
+        - create two new edges with correct node IDs
+        ? old edge needs to be deleted from the registry
+    line.split
+        in: point
+        out: 2 lines
+        - create two new lines
