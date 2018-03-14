@@ -53,6 +53,7 @@ class EdgeRegistry(UserList):
             raise KeyError(f"Vertex {vertex} is not in {self}")
 
     def _get_edges_by_node(self, node):
+        #TODO this is too promiscuous?
         ''' [Helper for .get_edges()] Return the Edges which contain the Node '''
         edges = []
 
