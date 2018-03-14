@@ -6,6 +6,9 @@ class XY():
     ''' a pair of x and y values which represent either a
         coordinate or a lengths in the x and y axes '''
 
+    # Add additional space beyond the location of the coordinates
+    # when displaying XY on its own
+    _CANVAS_PADDING = 10
     _DEFAULT_COLOR = "black"
     _DEFAULT_BACKGROUND_COLOR = "white"
 
@@ -60,10 +63,29 @@ class XY():
             return XY(self.x + value, self.y + value)
 
     def __sub__(self, value):
+        #TODO is floor_minus a thing?
         if isinstance(value, XY):
-            return XY(self.x - value.x, self.y - value.y)
+            #TODO is this just cramming two lines onto one line?
+            x, y = (self.x - value.x, self.y - value.y)
         elif isinstance(value, int):
-            return XY(self.x - value, self.y - value)
+            x, y = (self.x - value, self.y - value)
+
+        #TODO slicker?
+        #TODO Will this ever come up?
+        if x < 0:
+            print(f"Warning: subtraction result {x} was replaced with 0")
+            x = 0
+        if y < 0:
+            print(f"Warning: subtraction result {y} was replaced with 0")
+            y = 0
+
+        #if x < 0 or y < 0:
+            #TODO custom exception name so I can handle it outside?
+            #raise ValueError(f"{self} minus {value} is out of bounds: XY(x, y)")
+        #else:
+            #return XY(x, y)
+
+        return XY(x, y)
 
     def __mul__(self, value):
         if isinstance(value, XY):
@@ -131,9 +153,9 @@ class XY():
         ''' Add a point at XY to a PIL draw object '''
         draw.point(self.as_tuple(), fill=color)
 
-    def show(self, canvas_size, color=_DEFAULT_COLOR):
+    def show(self, color=_DEFAULT_COLOR):
         ''' Show a point at XY '''
-        img_size = canvas_size
+        img_size = self + XY._CANVAS_PADDING
 
         img = Image.new("RGBA", img_size.as_tuple(), XY._DEFAULT_BACKGROUND_COLOR)
 

@@ -61,7 +61,7 @@ class EdgeRegistry(UserList):
                 edges.append(edge)
 
         if edges:
-            return result
+            return EdgeRegistry(edges)
         else:
             raise KeyError(f"Node {node} is not in {self}")
 
@@ -105,6 +105,24 @@ class EdgeRegistry(UserList):
 
         img.show()
 
+    def add_to_draw(self, draw):
+        for edge in self:
+            print(f"EdgeRegistry: adding {edge} to {draw}")
+            edge.add_to_draw(draw)
+
+    def show(self):
+        #XXX TEMPORARY HACK XXX
+        #TODO image size needs to be calculated
+        img_size = XY(300)
+
+        img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
+
+        draw = ImageDraw.Draw(img)
+
+        self.add_to_draw(draw)
+
+        img.show()
+
     def __contains__(self, line):
         ''' Check whether LineSegment is in any of the Edges of the registry '''
         found = False
@@ -116,3 +134,11 @@ class EdgeRegistry(UserList):
                 else:
                     raise UserWarning(f"Found another match for {line} in {self}: {edge}")
         return found
+
+    def __repr__(self):
+        output = ""
+        for edge in self:
+            #TODO is this how this is done?
+            output += f"{str(edge)} \n"
+
+        return output

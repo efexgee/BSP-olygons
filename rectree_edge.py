@@ -1,36 +1,36 @@
 #!/usr/bin/env python
 
+#TODO check private attributes and methods in all modules
+
 from PIL import Image, ImageDraw
+from xy import *
 
-#TODO How do I import this cleanly?
-#from line import *
-# star-imports are gross
-#import line
-# have to reference with module name
-#from line import LineSegment as LineSegment, XY as XY
-from line import *
-#TODO assume I should not import XY unless I use XY in this file
+class Edge():
+    ''' Connects two Vertices and two bounded Nodes '''
 
-#TODO inherit from LineSegment
-# .split() would be like Edge.split() but it
-# would call super().split()
-
-#TODO should Edge be "immutable"?
-# use read-only properties
-
-class Edge(LineSegment):
-    ''' a LineSegment and two Nodes '''
+    # Add additional space beyond the bounding box of the LineSegment
+    # when displaying LineSegment alone in .show()
+    _CANVAS_PADDING = 10
+    _DEFAULT_BACKGROUND_COLOR = "white"
+    _DEFAULT_LINE_COLOR = "black"
+    _DEFAULT_WIDTH = 2
 
     def __init__(self, tail, head, left_node, right_node):
-        # Asking the user to explicitly specify None in the
-        # case of an exterior edge
-        super().__init__(tail, head)    # should be immutable
-        self.left_node = left_node      # should only be changed via replace()
-        self.right_node = right_node    # should only be changed via replace()
+        #TODO do this to avoid not defined error in connectors?
+        #TODO in general, declare all attributes in __init__?
+        self._tail = None
+        self._head = None
+
+        tail.connect_outbound(self)
+        self.connect_into(head)
+        # Forcing the user to explicitly specify None in the
+        # case of an exterior edge by not providing defaults
+        self._left_node = left_node      # should only be changed via replace()
+        self._right_node = right_node    # should only be changed via replace()
 
     def describes(self, node):
         ''' Check whether Edge is part of a Node '''
-        return node in (self.left_node, self.right_node)
+        return node in (self._left_node, self._right_node)
 
     def split(self, point):
         ''' Split Edge at point XY and return two new Edges
@@ -44,8 +44,9 @@ class Edge(LineSegment):
         except ValueError as e:
             raise ValueError(e.message.replace("LineSegment", "Edge"))
 
-        rear_edge = Edge(rear_segment, edge.left_node, edge.right_node)
-        front_edge = Edge(front_segment, edge.left_node, edge.right_node)
+        raise NotImplemented("split won't work now")
+        rear_edge = Edge(rear_segment, edge._left_node, edge._right_node)
+        front_edge = Edge(front_segment, edge._left_node, edge._right_node)
 
         return rear_edge, front_edge
 
@@ -53,10 +54,10 @@ class Edge(LineSegment):
         ''' Replace a Node associated with an Edge
             This the only way Edges' Nodes should be
             changed '''
-        if self.left_node == old_node:
-            self.left_node = new_node
-        elif self.right_node == old_node:
-            self.right_node = new_node
+        if self._left_node == old_node:
+            self._left_node = new_node
+        elif self._right_node == old_node:
+            self._right_node = new_node
         else:
             #TODO custom exception or ValueError as last resort
             raise KeyError(f"{old_node} not attached to {self}")
@@ -65,50 +66,53 @@ class Edge(LineSegment):
         ''' Return the right node as seen from the referrer POV '''
         #TODO should this have default behavior for None?
         # I think that's just messy
-        if caller is self.tail:
-            return self.right_node
-        elif caller is self.head:
-            return self.left_node
+        if caller is self._tail:
+            return self._right_node
+        elif caller is self._head:
+            return self._left_node
         else:
-            raise RuntimeError(f"{caller} is neither {self.tail} nor {self.head}")
+            raise RuntimeError(f"{caller} is neither {self._tail} nor {self._head}")
 
     def get_rel_left(self, caller):
         ''' Return the left node as seen from the referrer POV '''
-        if caller is self.tail:
-            return self.left_node
-        elif caller is self.head:
-            return self.right_node
+        if caller is self._tail:
+            return self._left_node
+        elif caller is self._head:
+            return self._right_node
         else:
-            raise RuntimeError(f"{caller} is neither {self.tail} nor {self.head}")
+            raise RuntimeError(f"{caller} is neither {self._tail} nor {self._head}")
 
-    def _connect(self, vertex):
+    def _connect_from(self, vertex):
         ''' Connect to a vertex '''
-        self.tail = vertex
+        assert not self._tail, f"_tail of {self} is already set: {self._tail}"
+        self._tail = vertex
 
-    #TODO something not right here
+    def _connect_to(self, vertex):
+        #TODO thin one should never get used, I think
+        assert not self._head, f"_head of {self} is already set: {self._head}"
+        self._head = vertex
 
-    def couple(self, vertex):
-        ''' '''
-        self.head = vertex
+    def connect_into(self, vertex):
+        self._connect_to(vertex)
         vertex._connect(self)
 
-    def add_to_draw(self, draw, color=None, width=None):
+    def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_WIDTH):
         ''' Add Edge to the specified PIL draw object '''
         #TODO self.line.add_to_draw(**{arg: val})
 
-        #TODO wouldn't need super() if I weren't planning on adding
-        # the node labels, right?
-        super().add_to_draw(draw)
-        #TODO label with the two nodes
-        # This is going to be a bit of a to-do
+        print(f"Edge: adding ({self._tail._repr_coords()}-{self._head._repr_coords()}) to {draw}")
+        draw.line((self._tail.as_tuple(), self._head.as_tuple()), fill=color, width=width)
+
+        #TODO label with the two nodes, which is going to
+        # be a bit of a big to-do
 
     def show(self):
         ''' Show the LineSegment of the Edge '''
         #TODO support colors
-        img_size = self.get_canvas_size()
 
-        #TODO how do class attributes work now?
-        img = Image.new("RGBA", img_size.as_tuple(), LineSegment._DEFAULT_BACKGROUND_COLOR)
+        img_size = XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y)) + Edge._CANVAS_PADDING
+
+        img = Image.new("RGBA", img_size.as_tuple(), Edge._DEFAULT_BACKGROUND_COLOR)
 
         draw = ImageDraw.Draw(img)
 
@@ -116,6 +120,21 @@ class Edge(LineSegment):
 
         img.show()
 
+    def _rel_repr(self, vertex):
+        #TODO how many stars?
+        if vertex is self._tail:
+            near = self._tail
+            far = self._head
+        elif vertex is self._head:
+            near = self._head
+            far = self._tail
+        else:
+            #TODO am I checking too much?
+            #TODO correct exception? need to find a reference on
+            # python exception philosophy
+            raise ValueError(f"{vertex} is not connected to {self}")
+        #TODO should there be .get_rel_butt() and face?
+        return f"{near._repr_coords()}-{self.get_rel_left(vertex)}|{self.get_rel_right(vertex)}-{far._repr_coords()}"
+
     def __repr__(self):
-        #TODO is this how __repr__ with class inheritance is done?
-        return f"{super().__repr__()}: {self.left_node}, {self.right_node}"
+        return f"{self._tail._repr_coords()}-{self._left_node}|{self._right_node}-{self._head._repr_coords()}"
