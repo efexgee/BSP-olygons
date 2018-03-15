@@ -63,14 +63,14 @@ class XY():
             return XY(self.x + value, self.y + value)
 
     def __sub__(self, value):
-        #TODO is floor_minus a thing?
+        #TODO make diff classes for coords and things that can be negative
         if isinstance(value, XY):
-            #TODO is this just cramming two lines onto one line?
+            #TODO split into lines
             x, y = (self.x - value.x, self.y - value.y)
         elif isinstance(value, int):
             x, y = (self.x - value, self.y - value)
 
-        #TODO slicker?
+        #TODO max()
         #TODO Will this ever come up?
         if x < 0:
             print(f"Warning: subtraction result {x} was replaced with 0")

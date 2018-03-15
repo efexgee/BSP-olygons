@@ -53,7 +53,7 @@ class EdgeRegistry(UserList):
             raise KeyError(f"Vertex {vertex} is not in {self}")
 
     def _get_edges_by_node(self, node):
-        #TODO this is too promiscuous?
+        #TODO this is too promiscuous? -- WTF?
         ''' [Helper for .get_edges()] Return the Edges which contain the Node '''
         edges = []
 
@@ -139,7 +139,7 @@ class EdgeRegistry(UserList):
     def __repr__(self):
         output = ""
         for edge in self:
-            #TODO is this how this is done?
+            #TODO list comprehension with a join
             output += f"{str(edge)} \n"
 
         return output

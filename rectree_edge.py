@@ -64,8 +64,6 @@ class Edge():
 
     def get_rel_right(self, caller):
         ''' Return the right node as seen from the referrer POV '''
-        #TODO should this have default behavior for None?
-        # I think that's just messy
         if caller is self._tail:
             return self._right_node
         elif caller is self._head:

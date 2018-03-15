@@ -25,7 +25,7 @@ class Tree():
 
         # Store the dimensions of the root node since we'll be
         # deleting its Rectangle
-        #TODO use self.rectagle (which doesn't exist here)
+        #TODO use self.rectangle (which doesn't exist here)
         self.canvas = Rectangle(rectangle.orig, rectangle.dims)
 
     def get(self, id):

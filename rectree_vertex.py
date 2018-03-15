@@ -4,8 +4,7 @@ from xy import *
 
 class Vertex(XY):
     def __init__(self, x, y=None):
-        #TODO is this right? with the if statement and
-        # the single-element tuple?
+        #TODO args should be *coords
         self.edges = []
 
         if y:
@@ -13,6 +12,7 @@ class Vertex(XY):
         else:
             coords = (x,)
 
+        #TODO super init first to get a blank ancestor
         super().__init__(*coords)
 
     def _connect(self, edge):
@@ -37,10 +37,10 @@ class Vertex(XY):
         edge._connect_to(self)
 
     def _repr_coords(self):
-        #TODO * - **** 
+        #TODO use a .coords() method?
+        #TODO make castable to XY?
         return super().__repr__()
 
     def __repr__(self):
-        #TODO comprehension in __repr__ OK?
-        #TODO why is it printing single ticks?
-        return f"{super().__repr__()} {[edge._rel_repr(self) for edge in self.edges]}"
+        #TODO newlines
+        return f"{super().__repr__()} {','.join([edge._rel_repr(self) for edge in self.edges])}"

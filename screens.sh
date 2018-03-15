@@ -7,6 +7,7 @@ test_line
 "
 FILES="
 rectree*
+test_*
 "
 
 if [[ -z $STY ]]; then

@@ -43,6 +43,7 @@ print(f"five: {five}")
 print(f"six: {six}")
 print(f"seven: {seven}")
 print(f"eight: {eight}")
+print()
 
 reg.extend((four, five, six, seven, eight))
 

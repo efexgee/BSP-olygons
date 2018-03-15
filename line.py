@@ -132,7 +132,6 @@ class LineSegment():
         #TODO probably won't be used
         # this does not check for "touching" because that would include
         # adjacent vertices (LineSegments of length 1)
-        #TODO what's a better way to write this?
         return bool({self._tail, self._head}.intersection({line._tail, line._head}))
 
     def as_tuples(self):
@@ -145,7 +144,7 @@ class LineSegment():
 
     def get_canvas_size(self):
         ''' Provide dimensions required to display LineSegment '''
-        #TODO user bounding_box?
+        #TODO use bounding_box?
         #TODO don't support edge.show this way
         # This is broken out from .show() to allow Edge.show()
         return XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y)) + LineSegment._CANVAS_PADDING
