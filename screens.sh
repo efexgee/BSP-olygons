@@ -2,8 +2,6 @@
 
 PY_FILES="
 xy
-line
-test_line
 "
 FILES="
 rectree*
