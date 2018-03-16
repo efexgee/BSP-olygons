@@ -6,18 +6,15 @@ from PIL import Image, ImageDraw
 from xy import *
 
 class Edge():
-    ''' Connects two Vertices and two bounded Nodes '''
+    ''' Connects two Vertices and the Nodes shared by the Edge '''
 
-    # Add additional space beyond the bounding box of the LineSegment
-    # when displaying LineSegment alone in .show()
+    # Padding when displaying Edges on their own
     _CANVAS_PADDING = 10
     _DEFAULT_BACKGROUND_COLOR = "white"
     _DEFAULT_LINE_COLOR = "black"
-    _DEFAULT_WIDTH = 2
+    _DEFAULT_LINE_WIDTH = 2
 
     def __init__(self, tail, head, left_node, right_node):
-        #TODO do this to avoid not defined error in connectors?
-        #TODO in general, declare all attributes in __init__?
         self._tail = None
         self._head = None
 
@@ -35,8 +32,10 @@ class Edge():
     def split(self, point):
         ''' Split Edge at point XY and return two new Edges
             which have the same associated Nodes '''
+
+        raise NotImplemented(".split() is currently broken")
+
         try:
-            #TODO does the exception handling change now that I am a subclass?
             rear_segment, front_segment = super().split(point)
         #TODO different ways to handle re-raising
         except KeyError:
@@ -69,6 +68,8 @@ class Edge():
         elif caller is self._head:
             return self._left_node
         else:
+            #TODO double-check that this is an OK exception
+            #TODO it feels like a KeyError but I'm told it's not, I think
             raise RuntimeError(f"{caller} is neither {self._tail} nor {self._head}")
 
     def get_rel_left(self, caller):
@@ -86,7 +87,7 @@ class Edge():
         self._tail = vertex
 
     def _connect_to(self, vertex):
-        #TODO thin one should never get used, I think
+        #TODO this one should never get used, I think
         assert not self._head, f"_head of {self} is already set: {self._head}"
         self._head = vertex
 
@@ -94,27 +95,32 @@ class Edge():
         self._connect_to(vertex)
         vertex._connect(self)
 
-    def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_WIDTH):
+    def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_LINE_WIDTH):
         ''' Add Edge to the specified PIL draw object '''
-        #TODO self.line.add_to_draw(**{arg: val})
 
-        print(f"Edge: adding ({self._tail._repr_coords()}-{self._head._repr_coords()}) to {draw}")
+        #print(f"Edge: adding ({self._tail._repr_coords()}-{self._head._repr_coords()}) to {draw} in {color}")
         draw.line((self._tail.as_tuple(), self._head.as_tuple()), fill=color, width=width)
 
         #TODO label with the two nodes, which is going to
         # be a bit of a big to-do
+        #TODO I really don't want to write the code to find these points
+        #midpoint = self._tail + (self._head - self._tail) // 2
 
-    def show(self):
-        ''' Show the LineSegment of the Edge '''
-        #TODO support colors
+    def show(self, color=None, width=None):
+        ''' Display the Edge '''
 
         img_size = XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y)) + Edge._CANVAS_PADDING
-
         img = Image.new("RGBA", img_size.as_tuple(), Edge._DEFAULT_BACKGROUND_COLOR)
-
         draw = ImageDraw.Draw(img)
 
-        self.add_to_draw(draw)
+        args = {}
+        #TODO this doesn't feel right
+        if color:
+            args["color"] = color
+        if width:
+            args["width"] = width
+
+        self.add_to_draw(draw, **args)
 
         img.show()
 
@@ -127,7 +133,6 @@ class Edge():
             near = self._head
             far = self._tail
         else:
-            #TODO am I checking too much?
             #TODO correct exception? need to find a reference on
             # python exception philosophy
             raise ValueError(f"{vertex} is not connected to {self}")

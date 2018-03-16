@@ -3,6 +3,10 @@
 from rectree_edge import *
 from rectree_vertex import *
 from rectree_registry import *
+from rectree_node import *
+
+img = Image.new("RGBA", (300, 300), "white")
+draw = ImageDraw.Draw(img)
 
 butt = Vertex(50, 250)
 face = Vertex(200, 150)
@@ -48,3 +52,11 @@ print()
 reg.extend((four, five, six, seven, eight))
 
 print(f"reg:\n{reg}")
+
+triangle_L = Node("L", " ")
+triangle_L.add_polygon([butt, face, top], [arrow, spear, poker])
+
+print(f"triangle_L: {triangle_L}")
+
+reg.add_to_draw(draw)
+triangle_L.centroid().add_to_draw(draw)
