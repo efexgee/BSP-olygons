@@ -72,7 +72,13 @@ class Edge():
             #TODO it feels like a KeyError but I'm told it's not, I think
             raise RuntimeError(f"{caller} is neither {self._tail} nor {self._head}")
 
+    def vertices(self):
+        #TODO just to avoid touching the privates. too many methods?
+        return self._tail, self._head
+
     def get_rel_left(self, caller):
+        #TODO get_rel_left or rel_left?
+        #TODO methods masquerading as attributes? no! assignments, right?
         ''' Return the left node as seen from the referrer POV '''
         if caller is self._tail:
             return self._left_node

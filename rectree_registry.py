@@ -2,6 +2,7 @@
 
 from collections import UserList
 from rectree_edge import *
+from rectree_node import *
 
 class EdgeRegistry(UserList):
     ''' A list of Edges that can be addressed by their LineSegments '''
@@ -59,7 +60,7 @@ class EdgeRegistry(UserList):
         if isinstance(value, line):
             return self._get_edge_by_line(value)
         else:
-            raise TypeError(f"Can't retrieve an Edge based on type of {value}: {type(value)}")
+            raise TypeError(f"Can't retrieve an Edge based on the type of {value}: {type(value)}")
 
     def get_edges(self, value):
         ''' Return a list of Edges which contain a vertex or a Node '''
@@ -127,8 +128,7 @@ class EdgeRegistry(UserList):
             if isinstance(target, Edge):
                 print("got here")
                 target.add_to_draw(draw, color=highlight)
-            #XXX temp hack to reference nodes by ID
-            elif isinstance(target, str):
+            elif isinstance(target, Node):
                 self.add_node_to_draw(target, draw, color=highlight)
             else:
                 raise TypeError(f"Can't highlight Edges by {type(target)}: {target}")
