@@ -11,21 +11,6 @@ class EdgeRegistry(UserList):
     _DEFAULT_LINE_HIGHLIGHT_COLOR = "pink"
     _CANVAS_PADDING = 10
 
-    def _get_edge_by_line(self, line):
-        ''' [Helper for .get_edge()] Return the Edge which contains a LineSegment '''
-        result = None
-
-        for edge in self:
-            if edge.line == line:
-                if not result:
-                    result = edge
-                else:
-                    raise UserWarning(f"Found another match for {line} in {self}: {edge}")
-        if result:
-            return result
-        else:
-            raise KeyError(f"LineSegment {line} is not in {self}")
-
     def _get_edges_by_vertex(self, vertex):
         ''' [Helper for .get_edges()] Return all Edges which contain the vertex '''
         edges = []
@@ -52,15 +37,6 @@ class EdgeRegistry(UserList):
             return EdgeRegistry(edges)
         else:
             raise KeyError(f"Node {node} is not in {self}")
-
-    def get_edge(self, value):
-        ''' Return the Edge which contains a LineSegment or vertex '''
-        # This dispatch method allows for additional supported types
-        # but I don't know what those would be
-        if isinstance(value, line):
-            return self._get_edge_by_line(value)
-        else:
-            raise TypeError(f"Can't retrieve an Edge based on the type of {value}: {type(value)}")
 
     def get_edges(self, value):
         ''' Return a list of Edges which contain a vertex or a Node '''
@@ -99,7 +75,11 @@ class EdgeRegistry(UserList):
 
         img.show()
 
-    def show_highlighted(self, targets, highlight=_DEFAULT_LINE_HIGHLIGHT_COLOR, color=None, width=None):
+    def add_highlighted():
+        #TODO implement!
+        pass
+
+    def show_highlighted(self, targets, labels=None, highlight=_DEFAULT_LINE_HIGHLIGHT_COLOR, color=None, width=None):
         ''' Show all the Edges but highlight specific Edges or those
             bounding a Node '''
         args = {}
@@ -108,6 +88,8 @@ class EdgeRegistry(UserList):
             args["color"] = color
         if width:
             args["width"] = width
+        if labels:
+            args["labels"] = labels
 
         img_size = self.get_canvas_size()
 
@@ -119,11 +101,12 @@ class EdgeRegistry(UserList):
 
         # Overlay the highlighted elements
         #TODO this HAS to be like **** at least!
+        print(f"targets: {targets}")
         if not isinstance(targets, list):
             targets = [targets]
 
+        print(f"targets: {targets}")
         for target in targets:
-            print(type(target))
             #TODO why does this type check not work?!
             if isinstance(target, Edge):
                 print("got here")
@@ -135,7 +118,7 @@ class EdgeRegistry(UserList):
 
         img.show()
 
-    def add_to_draw(self, draw, color=None, width=None):
+    def add_to_draw(self, draw, labels=None, color=None, width=None):
         ''' Add all Edges to a PIL Draw object '''
         args = {}
 
@@ -143,12 +126,14 @@ class EdgeRegistry(UserList):
             args["color"] = color
         if width:
             args["width"] = width
+        if labels:
+            args["labels"] = labels
 
         for edge in self:
             #print(f"EdgeRegistry: adding {edge} to {draw}")
             edge.add_to_draw(draw, **args)
 
-    def show(self, color=None, width=None):
+    def show(self, labels=None, color=None, width=None):
         ''' Display all the Edges '''
         args = {}
 
@@ -156,6 +141,8 @@ class EdgeRegistry(UserList):
             args["color"] = color
         if width:
             args["width"] = width
+        if labels:
+            args["labels"] = labels
 
         img_size = self.get_canvas_size()
 

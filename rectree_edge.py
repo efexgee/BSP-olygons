@@ -4,6 +4,7 @@
 
 from PIL import Image, ImageDraw
 from xy import *
+from label import *
 
 class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
@@ -101,18 +102,27 @@ class Edge():
         self._connect_to(vertex)
         vertex._connect(self)
 
-    def add_to_draw(self, draw, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_LINE_WIDTH):
+    def add_to_draw(self, draw, labels=False, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_LINE_WIDTH):
         ''' Add Edge to the specified PIL draw object '''
 
-        #print(f"Edge: adding ({self._tail._repr_coords()}-{self._head._repr_coords()}) to {draw} in {color}")
+        #print(f"Edge: adding {self} in {color}")
         draw.line((self._tail.as_tuple(), self._head.as_tuple()), fill=color, width=width)
 
-        #TODO label with the two nodes, which is going to
-        # be a bit of a big to-do
-        #TODO I really don't want to write the code to find these points
-        #midpoint = self._tail + (self._head - self._tail) // 2
+        if labels:
+            #print(f"Labeling {self}")
+            tail_coords = self._tail
+            head_coords = self._head
 
-    def show(self, color=None, width=None):
+            if self._right_node:
+                print(f"Labeling with {color} {self._right_node.id}")
+                r_label = label_loc_xy(tail_coords, head_coords, 10)
+                draw.text(r_label.as_tuple(), self._right_node.id, color)
+            if self._left_node:
+                print(f"Labeling with {color} {self._left_node.id}")
+                l_label = label_loc_xy(tail_coords, head_coords, -10)
+                draw.text(l_label.as_tuple(), self._left_node.id, color)
+
+    def show(self, labels=None, color=None, width=None):
         ''' Display the Edge '''
 
         img_size = XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y)) + Edge._CANVAS_PADDING
@@ -125,13 +135,15 @@ class Edge():
             args["color"] = color
         if width:
             args["width"] = width
+        if labels:
+            #TODO defaulting labels to None to keep only one default
+            args["labels"] = labels
 
         self.add_to_draw(draw, **args)
 
         img.show()
 
     def _rel_repr(self, vertex):
-        #TODO how many stars?
         if vertex is self._tail:
             near = self._tail
             far = self._head
@@ -142,8 +154,26 @@ class Edge():
             #TODO correct exception? need to find a reference on
             # python exception philosophy
             raise ValueError(f"{vertex} is not connected to {self}")
+
+        left_node = None
+        right_node = None
+
+        if self.get_rel_left(vertex):
+            left_node = self.get_rel_left(vertex).id
+        if self.get_rel_right(vertex):
+            right_node = self.get_rel_right(vertex).id
+
         #TODO should there be .get_rel_butt() and face?
-        return f"{near._repr_coords()}-{self.get_rel_left(vertex)}|{self.get_rel_right(vertex)}-{far._repr_coords()}"
+        return f"{near._repr_coords()}-{left_node}|{right_node}-{far._repr_coords()}"
 
     def __repr__(self):
-        return f"{self._tail._repr_coords()}-{self._left_node}|{self._right_node}-{self._head._repr_coords()}"
+        #TODO how do I deal with this?
+        left_node = None
+        right_node = None
+
+        if self._left_node:
+            left_node = self._left_node.id
+        if self._right_node:
+            right_node = self._right_node.id
+
+        return f"{self._tail._repr_coords()}-{left_node}|{right_node}-{self._head._repr_coords()}"

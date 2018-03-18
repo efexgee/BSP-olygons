@@ -9,15 +9,18 @@ img = Image.new("RGBA", (300, 300), "white")
 draw = ImageDraw.Draw(img)
 
 reg = EdgeRegistry()
-triangle_L = Node("L", None, reg)
+tri_L = Node("L", None, reg)
+tri_R = Node("R", None, reg)
+tri_O = Node("O", None, reg)
+tri_P = Node("P", None, reg)
 
 v_butt = Vertex(50, 250)
 v_face = Vertex(200, 150)
 v_top = Vertex(100, 50)
 
-e_arrow = Edge(v_butt, v_face, triangle_L, "R")
-e_spear = Edge(v_face, v_top, triangle_L, "O")
-e_poker = Edge(v_butt, v_top, "P", triangle_L)
+e_arrow = Edge(v_butt, v_face, tri_L, tri_R)
+e_spear = Edge(v_face, v_top, tri_L, tri_O)
+e_poker = Edge(v_butt, v_top, None, tri_L)
 
 reg.extend((e_arrow, e_spear, e_poker))
 
@@ -37,13 +40,13 @@ print()
 v_bottom = Vertex(225, 280)
 v_top_right = Vertex(275, 80)
 
-e_four = Edge(v_butt, v_bottom, "R", "Q")
-e_five = Edge(v_bottom, v_face, "S", "R")
+e_four = Edge(v_butt, v_bottom, tri_R, None)
+e_five = Edge(v_bottom, v_face, tri_R, tri_P)
 
-e_six = Edge(v_top, v_top_right, "?", "?")
-e_seven = Edge(v_face, v_top_right, "?", "?")
+e_six = Edge(v_top, v_top_right, None, tri_O)
+e_seven = Edge(v_face, v_top_right, tri_O, tri_P)
 
-e_eight = Edge(v_top_right, v_bottom, "?", "?")
+e_eight = Edge(v_top_right, v_bottom, None, tri_P)
 
 print(f"e_four: {e_four}")
 print(f"e_five: {e_five}")
@@ -56,9 +59,9 @@ reg.extend((e_four, e_five, e_six, e_seven, e_eight))
 
 print(f"reg:\n{reg}")
 
-#triangle_L.add_polygon([v_butt, v_face, top], [e_arrow, e_spear, e_poker])
+#tri_L.add_polygon([v_butt, v_face, v_top], [e_arrow, e_spear, e_poker])
 
-print(f"triangle_L: {triangle_L}")
+print(f"tri_L: {tri_L}")
 
 reg.add_to_draw(draw)
-triangle_L.centroid().add_to_draw(draw)
+tri_L.centroid().add_to_draw(draw)
