@@ -59,9 +59,19 @@ reg.extend((e_four, e_five, e_six, e_seven, e_eight))
 
 print(f"reg:\n{reg}")
 
-#tri_L.add_polygon([v_butt, v_face, v_top], [e_arrow, e_spear, e_poker])
-
 print(f"tri_L: {tri_L}")
 
 reg.add_to_draw(draw)
 tri_L.centroid().add_to_draw(draw)
+
+def track_node(edge, node):
+    vertex = edge._head
+
+    #TODO Ok, how do I do dynamically chose which method to call?
+    #TODO need a relative follow on the edge
+
+    #TODO 'is' appropriate here? where else?
+    if node is edge._right_node:
+        # Keeping our left hand on the wall
+        pass
+                

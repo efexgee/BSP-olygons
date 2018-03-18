@@ -114,11 +114,11 @@ class Edge():
             head_coords = self._head
 
             if self._right_node:
-                print(f"Labeling with {color} {self._right_node.id}")
+                #print(f"Labeling with {color} {self._right_node.id}")
                 r_label = label_loc_xy(tail_coords, head_coords, 10)
                 draw.text(r_label.as_tuple(), self._right_node.id, color)
             if self._left_node:
-                print(f"Labeling with {color} {self._left_node.id}")
+                #print(f"Labeling with {color} {self._left_node.id}")
                 l_label = label_loc_xy(tail_coords, head_coords, -10)
                 draw.text(l_label.as_tuple(), self._left_node.id, color)
 

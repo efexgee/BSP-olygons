@@ -75,9 +75,10 @@ class EdgeRegistry(UserList):
 
         img.show()
 
-    def add_highlighted():
+    def add_to_draw_highlighted(self, targets, labels=None, highlight=_DEFAULT_LINE_HIGHLIGHT_COLOR, color=None, width=None):
+        #TODO this should be an option for the regular add and show methods?
         #TODO implement!
-        pass
+        raise NotImplementedError("Yeah, no.")
 
     def show_highlighted(self, targets, labels=None, highlight=_DEFAULT_LINE_HIGHLIGHT_COLOR, color=None, width=None):
         ''' Show all the Edges but highlight specific Edges or those
@@ -101,11 +102,9 @@ class EdgeRegistry(UserList):
 
         # Overlay the highlighted elements
         #TODO this HAS to be like **** at least!
-        print(f"targets: {targets}")
         if not isinstance(targets, list):
             targets = [targets]
 
-        print(f"targets: {targets}")
         for target in targets:
             #TODO why does this type check not work?!
             if isinstance(target, Edge):

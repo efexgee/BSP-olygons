@@ -45,13 +45,12 @@ class Node():
         return XY(round(mean(x)), round(mean(y)))
 
     def __repr__(self):
-        #DEBUG - enable using dummy nodes (i.e. ints)
-        if hasattr(self.parent, "id"):
-            parent = self.parent.id
-        else:
-            parent = self.parent
-
         #TODO there must be a saner way to do this
+        if self.parent is None:
+            parent = " "
+        else:
+            parent = self.parent.id
+
         if self.a is None:
             a = " "
         else:
