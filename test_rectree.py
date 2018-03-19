@@ -64,54 +64,70 @@ print(f"tri_L: {tri_L}")
 reg.add_to_draw(draw)
 tri_L.centroid().add_to_draw(draw)
 
-def trace_node(starting_edge, node):
+# registry for split testing
+splitsies = EdgeRegistry()
 
-    #TODO Ok, how do I do dynamically chose which method to call?
-    #TODO need a relative follow on the edge
+node_m = Node("M", None, splitsies)
+node_n = Node("N", None, splitsies)
+node_o = Node("O", None, splitsies)
 
-    edges = [starting_edge]
+v_a = Vertex(50,50)
+v_b = Vertex(150,75)
+v_c = Vertex(250,200)
+v_d = Vertex(100,150)
 
-    #TODO 'is' appropriate here? where else?
+#TODO make everything consistent in checking left first
+e_ab = Edge(v_a, v_b, None, node_m)
+e_bc = Edge(v_b, v_c, None, node_m)
+e_cd = Edge(v_c, v_d, None, node_m)
+e_da = Edge(v_d, v_a, None, node_m)
 
-    # Determine which side of the edges we're following
-    if node is starting_edge._right_node:
-        # Keeping our left hand on the wall
-        follow = "right"
-    elif node is starting_edge._left_node:
-        # Right hand
-        follow = "left"
-    else:
-        raise KeyError(f"{node} is not on {starting_edge}")
+splitsies.extend((e_ab, e_bc, e_cd, e_da))
 
-    print(f"We are checking {follow} sides for {node}")
+e_db = Edge(v_d, v_b, node_o, node_n)
+splitsies.extend((e_db,))
 
-    cur_edge = starting_edge
-    cur_vertex = starting_edge._tail
-    
-    # Begin traversal
+def update_edges_from_new_edge(new_edge, old_node):
+
+    start_vertex = new_edge._head
+    stop_vertex = new_edge._tail
+
+    #TODO comma-separated or make tuple?
+    #for side in "right", "left": 
+
+    relabel_edges(start_vertex, stop_vertex, "right", old_node, new_edge._right_node)
+    relabel_edges(start_vertex, stop_vertex, "left", old_node, new_edge._left_node)
+
+def relabel_edges(start_vertex, stop_vertex, side, old_node, new_node):
+
+    cur_vertex = start_vertex
+
     while True:
+        cur_edge = track_next_edge(cur_vertex, side, old_node)
+
+        cur_edge.replace(old_node, new_node)
+
         cur_vertex = cur_edge.get_other_vertex(cur_vertex)
-        cur_edge = None
 
-        print(f"We are at vertex {cur_vertex}")
-
-        #DEBUG this counter is for debugging only - should be removed
-        found = 0
-
-        for edge in cur_vertex.edges:
-            print(f"Looking at {edge._rel_repr(cur_vertex)}")
-            if node is edge.get_rel_side(follow, cur_vertex):
-                print(f"Found edge with {node} on {follow} side: {edge}")
-                cur_edge = edge
-                #TODO there would be a break somewhere around here
-                found += 1
-
-        assert found <= 1, f"Found more than 1 edge with {node} on the {follow} side on {cur_vertex}: {found}"
-
-        if cur_edge is starting_edge:
-            print(f"Going to follow {edge}")
+        if cur_vertex is stop_vertex:
             break
 
-        edges.append(cur_edge)
+def track_next_edge(vertex, side, node):
+    #DEBUG this counter is for debugging only - should be removed
+    found = 0
 
-    return tuple(edges)
+    next_edge = None
+
+    for edge in vertex.edges:
+        print(f"Looking at {edge._rel_repr(vertex)}")
+        if node is edge.get_rel_side(side, vertex):
+            print(f"Found edge with {node} on {side} side: {edge}")
+            next_edge = edge
+            #DEBUG only
+            #TODO there would be a break somewhere around here
+            found += 1
+
+    assert found <= 1, f"Found more than 1 edge with {node} on the {side} side on {vertex}: {found} found"
+    assert next_edge, f"Found no edges with {node} on the {side} side on {vertex}"
+
+    return next_edge
