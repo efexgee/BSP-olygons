@@ -42,5 +42,5 @@ class Vertex(XY):
         return super().__repr__()
 
     def __repr__(self):
-        #TODO newlines
-        return f"{super().__repr__()} {','.join([edge._rel_repr(self) for edge in self.edges])}"
+        # Can't use newlines inside f-strings because '\' are not allowed
+        return "{}\n{}".format(super().__repr__(), '\n'.join(["\t{}".format(edge._rel_repr(self)) for edge in self.edges]))

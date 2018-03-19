@@ -108,7 +108,6 @@ class EdgeRegistry(UserList):
         for target in targets:
             #TODO why does this type check not work?!
             if isinstance(target, Edge):
-                print("got here")
                 target.add_to_draw(draw, color=highlight)
             elif isinstance(target, Node):
                 self.add_node_to_draw(target, draw, color=highlight)

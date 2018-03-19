@@ -64,14 +64,54 @@ print(f"tri_L: {tri_L}")
 reg.add_to_draw(draw)
 tri_L.centroid().add_to_draw(draw)
 
-def track_node(edge, node):
-    vertex = edge._head
+def trace_node(starting_edge, node):
 
     #TODO Ok, how do I do dynamically chose which method to call?
     #TODO need a relative follow on the edge
 
+    edges = [starting_edge]
+
     #TODO 'is' appropriate here? where else?
-    if node is edge._right_node:
+
+    # Determine which side of the edges we're following
+    if node is starting_edge._right_node:
         # Keeping our left hand on the wall
-        pass
-                
+        follow = "right"
+    elif node is starting_edge._left_node:
+        # Right hand
+        follow = "left"
+    else:
+        raise KeyError(f"{node} is not on {starting_edge}")
+
+    print(f"We are checking {follow} sides for {node}")
+
+    cur_edge = starting_edge
+    cur_vertex = starting_edge._tail
+    
+    # Begin traversal
+    while True:
+        cur_vertex = cur_edge.get_other_vertex(cur_vertex)
+        cur_edge = None
+
+        print(f"We are at vertex {cur_vertex}")
+
+        #DEBUG this counter is for debugging only - should be removed
+        found = 0
+
+        for edge in cur_vertex.edges:
+            print(f"Looking at {edge._rel_repr(cur_vertex)}")
+            if node is edge.get_rel_side(follow, cur_vertex):
+                print(f"Found edge with {node} on {follow} side: {edge}")
+                cur_edge = edge
+                #TODO there would be a break somewhere around here
+                found += 1
+
+        assert found <= 1, f"Found more than 1 edge with {node} on the {follow} side on {cur_vertex}: {found}"
+
+        if cur_edge is starting_edge:
+            print(f"Going to follow {edge}")
+            break
+
+        edges.append(cur_edge)
+
+    return tuple(edges)

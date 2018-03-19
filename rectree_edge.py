@@ -62,31 +62,34 @@ class Edge():
             #TODO custom exception or ValueError as last resort
             raise KeyError(f"{old_node} not attached to {self}")
 
-    def get_rel_right(self, caller):
-        ''' Return the right node as seen from the referrer POV '''
+    def get_other_vertex(self, caller):
+        #TODO get_blah() vs. plain blah()?
         if caller is self._tail:
-            return self._right_node
+            return self._head
         elif caller is self._head:
-            return self._left_node
+            return self._tail
         else:
-            #TODO double-check that this is an OK exception
-            #TODO it feels like a KeyError but I'm told it's not, I think
-            raise RuntimeError(f"{caller} is neither {self._tail} nor {self._head}")
+            #TODO wrong exception type; see above
+            raise KeyError(f"{caller} is not part of {self}")
+
+    def get_rel_side(self, side, caller):
+        ''' Return a node as seen from the referrer POV '''
+        if side == "right":
+            if caller is self._tail:
+                return self._right_node
+            else:
+                return self._left_node
+        elif side == "left":
+            if caller is self._tail:
+                return self._left_node
+            else:
+                return self._right_node
+        else:
+            raise ValueError(f"{caller} is neither {self._tail} nor {self._head}")
 
     def vertices(self):
         #TODO just to avoid touching the privates. too many methods?
         return self._tail, self._head
-
-    def get_rel_left(self, caller):
-        #TODO get_rel_left or rel_left?
-        #TODO methods masquerading as attributes? no! assignments, right?
-        ''' Return the left node as seen from the referrer POV '''
-        if caller is self._tail:
-            return self._left_node
-        elif caller is self._head:
-            return self._right_node
-        else:
-            raise RuntimeError(f"{caller} is neither {self._tail} nor {self._head}")
 
     def _connect_from(self, vertex):
         ''' Connect to a vertex '''
@@ -158,12 +161,11 @@ class Edge():
         left_node = None
         right_node = None
 
-        if self.get_rel_left(vertex):
-            left_node = self.get_rel_left(vertex).id
-        if self.get_rel_right(vertex):
-            right_node = self.get_rel_right(vertex).id
+        if self.get_rel_side("left", vertex):
+            left_node = self.get_rel_side("left", vertex).id
+        if self.get_rel_side("right", vertex):
+            right_node = self.get_rel_side("right", vertex).id
 
-        #TODO should there be .get_rel_butt() and face?
         return f"{near._repr_coords()}-{left_node}|{right_node}-{far._repr_coords()}"
 
     def __repr__(self):
