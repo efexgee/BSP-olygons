@@ -12,10 +12,10 @@ class XY():
     _DEFAULT_COLOR = "black"
     _DEFAULT_BACKGROUND_COLOR = "white"
 
-    #TODO try to implement iterator so XY can be used as a tuple
+    #MAYBE try to implement iterator so XY can be used as a tuple
 
     def __init__(self, x, y=None):
-        #TODO Can I check for "isindexable"?
+        #MAYBE Can I check for "isindexable"?
         # is container? from abstract classes (wwad)
         # hasattr getitem - would allow dicts
         # or catch exception on index
@@ -29,6 +29,10 @@ class XY():
                 self.y = x
             else:
                 self.y = y
+        elif isinstance(x, XY):
+            #HELP is this OK?
+            self.x = x.x
+            self.y = x.y
         else:
             raise TypeError(f"Arguments aren't int or tuple: x={x} y={y}")
 
@@ -40,10 +44,6 @@ class XY():
     def x(self, value):
         if not isinstance(value, int):
             raise TypeError(f"Value is not an integer: {value}")
-        #TODO I can't ensure positive values if I'm going to use
-        # XY to represent offsets / slopes
-        #if not value >= 0:
-            #raise ValueError("value is not positive: {}".format(value))
         self._x = value
 
     @property
@@ -62,36 +62,14 @@ class XY():
         elif isinstance(value, int):
             return XY(self.x + value, self.y + value)
 
-    def __sub__(self, value):
-        #TODO make diff classes for coords and things that can be negative
-        if isinstance(value, XY):
-            #TODO split into lines
-            x, y = (self.x - value.x, self.y - value.y)
-        elif isinstance(value, int):
-            x, y = (self.x - value, self.y - value)
-
-        #TODO max()
-        #TODO Will this ever come up?
-        if x < 0:
-            print(f"Warning: subtraction result {x} was replaced with 0")
-            x = 0
-        if y < 0:
-            print(f"Warning: subtraction result {y} was replaced with 0")
-            y = 0
-
-        #if x < 0 or y < 0:
-            #TODO custom exception name so I can handle it outside?
-            #raise ValueError(f"{self} minus {value} is out of bounds: XY(x, y)")
-        #else:
-            #return XY(x, y)
-
-        return XY(x, y)
-
     def __mul__(self, value):
         if isinstance(value, XY):
             return XY(self.x * value.x, self.y * value.y)
+        #TODO don't treat int and float separately
         elif isinstance(value, int):
             return XY(self.x * value, self.y * value)
+        elif isinstance(value, float):
+            return XY(round(self.x * value), round(self.y * value))
 
     def __floordiv__(self, value):
         if isinstance(value, XY):
@@ -115,36 +93,22 @@ class XY():
         else:
             return False
 
-    def __hash__(self):
-        #TODO probably no point to having a hash since I can't use
-        # this as a key
-        return hash(self.as_tuple())
-
     def __gt__(self, xy):
         return self.x > xy.x and self.y > xy.y
-
-    '''
-    def __gt__(self, xy):
-        # compare the non-equal dimensions
-        # A > B if A and B are on the same vertical or horizontal
-        # line and A is further from the origin than B
-        if self.x == xy.x:
-            return self.y > xy.y
-        elif self.y == xy.y:
-            return self.x > xy.x
-        else:
-            #TODO this should not be a warning-exception
-            raise UserWarning("Shared axis required to order XY objects: {} and {}".format(self, xy))
-    '''
 
     def __ge__(self, xy):
         ''' Greater than or equal to ( >= ) '''
         return self.x >= xy.x and self.y >= xy.y
 
-    def __abs__(self):
-        ''' Return absolute value of XY '''
-        #TODO Not used currently
-        return XY(abs(self.x), abs(self.y))
+    def __sub__(self, value):
+        if isinstance(value, XY):
+            x = self.x - value.x
+            y = self.y - value.y
+        elif isinstance(value, int):
+            x = self.x - value
+            y = self.y - value
+
+        return XY(x, y)
 
     def as_tuple(self):
         return (self.x, self.y)
@@ -167,3 +131,13 @@ class XY():
 
     def __repr__(self):
         return f"({self.x},{self.y})"
+
+class XYCoord(XY):
+    def __sub__(self, coord):
+        ''' Subtract a XYCoord with a lower limit of 0 in the result ''' 
+        result = super().__sub__(coord)
+
+        x = max(0, result._x)
+        y = max(0, result._y)
+
+        return XY(x, y)

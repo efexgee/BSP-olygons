@@ -2,22 +2,14 @@
 
 from xy import *
 
-class Vertex(XY):
-    def __init__(self, x, y=None):
-        #TODO args should be *coords
+class Vertex(XYCoord):
+    def __init__(self, *args):
+        super().__init__(*args)
+
         self.edges = []
-
-        if y:
-            coords = (x, y)
-        else:
-            coords = (x,)
-
-        #TODO super init first to get a blank ancestor
-        super().__init__(*coords)
 
     def _connect(self, edge):
         ''' Connect to an Edge '''
-        #TODO WDYT? *
         self.edges.append(edge)
 
     def disconnect(self, edge):
@@ -42,5 +34,5 @@ class Vertex(XY):
         return super().__repr__()
 
     def __repr__(self):
-        # Can't use newlines inside f-strings because '\' are not allowed
+        #TODO \n in f-string works just fine
         return "{}\n{}".format(super().__repr__(), '\n'.join(["\t{}".format(edge._rel_repr(self)) for edge in self.edges]))

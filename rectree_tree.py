@@ -3,30 +3,93 @@
 #TODO how to pep8?
 
 from rectree_node import *
+from rectree_vertex import *
 from rectree_edge import *
-from rectree_rectangle import *
-from line import *
+from rectree_registry import *
 from PIL import Image, ImageDraw
+from drawtree import drawtree
+from random import sample
+
+#TODO functions without a home
+
+def update_edges_from_new_edge(new_edge, old_node):
+
+    start_vertex = new_edge._head
+    stop_vertex = new_edge._tail
+
+    relabel_edges(start_vertex, stop_vertex, "right", old_node, new_edge._right_node)
+    relabel_edges(start_vertex, stop_vertex, "left", old_node, new_edge._left_node)
+
+def relabel_edges(start_vertex, stop_vertex, side, old_node, new_node):
+
+    cur_vertex = start_vertex
+
+    while True:
+        cur_edge = track_next_edge(cur_vertex, side, old_node)
+
+        cur_edge.replace(old_node, new_node)
+
+        cur_vertex = cur_edge.other_vertex(cur_vertex)
+
+        if cur_vertex is stop_vertex:
+            break
+
+def track_next_edge(vertex, side, node):
+    #DEBUG this counter is for debugging only - should be removed
+    found = 0
+
+    next_edge = None
+
+    for edge in vertex.edges:
+        #print(f"Looking at {edge._rel_repr(vertex)}")
+        if node is edge.rel_side(side, vertex):
+            ##print(f"Found edge with {node} on {side} side: {edge}")
+            next_edge = edge
+            #DEBUG only
+            #TODO there would be a break somewhere around here
+            found += 1
+
+    assert found <= 1, f"Found more than 1 edge with {node} on the {side} side on {vertex}: {found} found"
+    assert next_edge, f"Found no edges with {node} on the {side} side on {vertex}"
+
+    return next_edge
+
+def split_edge(edge, percentage, splitsies):
+    edge_a, vertex, edge_b = edge.split(percentage)
+    print(f"Split {edge} into {edge_a} and {edge_b} about {vertex}")
+
+    edge.disconnect()
+    splitsies.remove(edge)
+    splitsies.extend((edge_a, edge_b))
+
+    #TODO better to return all the new items
+    return vertex
 
 class Tree():
     ''' a binary tree of Rectangles '''
 
-    def __init__(self, rectangle):
+    def __init__(self, dimensions):
+        self.registry = EdgeRegistry()
+
         #TODO have __init__ call add_node()?
-        self.root = Node(0, None, rectangle)
+        self.root = Node(0, None, self.registry)
+
+        v_ul = Vertex(0,0)
+        v_ur = Vertex(dimensions * XY(1,0))
+        v_br = Vertex(dimensions)
+        v_bl = Vertex(dimensions * XY(0,1))
+
+        e_ulur = Edge(v_ul, v_ur, None, self.root)
+        e_urbr = Edge(v_ur, v_br, None, self.root)
+        e_brbl = Edge(v_br, v_bl, None, self.root)
+        e_blul = Edge(v_bl, v_ul, None, self.root)
+
+        self.registry.extend((e_ulur, e_urbr, e_brbl, e_blul))
+
         # the highest ID currently in the tree
         self.max_id = 0
 
-        # A registry of all Edges in the Tree
-        #TODO put root edges in there
-        self.registry = EdgeRegistry()
-        for line in self.root.rect.get_edges():
-            self.registry.append(Edge(line, self.root))
-
-        # Store the dimensions of the root node since we'll be
-        # deleting its Rectangle
-        #TODO use self.rectangle (which doesn't exist here)
-        self.canvas = Rectangle(rectangle.orig, rectangle.dims)
+        self.canvas = dimensions
 
     def get(self, id):
         ''' return the Node with the specified id '''
@@ -37,11 +100,11 @@ class Tree():
             elif cur.id == id:
                 return cur
 
-            found = walk(cur.a, id)
+            found = walk(cur.child_a, id)
             if found:
                 return found
 
-            found = walk(cur.b, id)
+            found = walk(cur.child_b, id)
             if found:
                 return found
 
@@ -53,7 +116,7 @@ class Tree():
             dimension (random for squares), and at 50%. '''
         cur = self.get(id)
 
-        print(f"\n=== Splitting id {id}:{cur} {direction} (probably into Node {self.max_id + 1} and Node {self.max_id + 2})")
+        print(f"\n=== Splitting id {id}:{cur} {direction}-wise (probably into Node {self.max_id + 1} and Node {self.max_id + 2})")
 
         # Check if node exist
         #TODO should this be handled by .get()?
@@ -63,93 +126,84 @@ class Tree():
             return
 
         # Check if node is a leaf node
-        if not ( cur.a is None and cur.b is None ):
+        if not ( cur.child_a is None and cur.child_b is None ):
             #TODO maybe this implicitly checks whether the Node exists?
             raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {cur}")
+
+        edges = self.registry.get_edges(cur)
+        print(f"Found {len(edges)} edges associated with {cur}")
 
         # Set default direction and check for valid direction
         if direction is None:
             # If no direction is specified, split across the short dimension or
+            #TODO need to implement
+            direction = "very not implemented!"
             # split randomly if it's a square
-            if cur.rect.dims.x > cur.rect.dims.y:
-                direction = "v"
-            elif cur.rect.dims.x < cur.rect.dims.y:
-                direction = "h"
-            else:
-                direction = choice(("v", "h"))
-        elif not direction.startswith(("v", "h")):
+
+        if not direction.startswith(("v", "h")):
             raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
-        # Tell the Node to split
-        node_a, node_b = cur.split(direction, location)
+        edge_a, edge_b = sample(edges, 2)
+        print(f"Chose two edges to split: {edge_a} & {edge_b}")
 
-        self.add_node(cur, node_a)
-        self.add_node(cur, node_b)
+        vertex_a = split_edge(edge_a, location, self.registry)
+        vertex_b = split_edge(edge_b, location, self.registry)
+        print(f"Created two new vertices: {vertex_a} & {vertex_b}")
 
-    def add_node(self, parent, node):
-        ''' Add a Node to the Tree under parent'''
         self.max_id += 1
+        new_node_a = Node(self.max_id, cur, self.registry)
+        self.max_id += 1
+        new_node_b = Node(self.max_id, cur, self.registry)
+        print(f"Created two new nodes: {new_node_a} & {new_node_b}")
 
-        if parent.child_a is None:
-            parent.child_a = node
-        elif parent.child_b is None:
-            parent.child_b = node
-        else:
-            raise RuntimeError(f"Can't add to full Node: {parent}")
+        cur.child_a = new_node_a
+        cur.child_b = new_node_b
+        print(f"Updated child pointers on {cur}")
 
-        #TODO deal with edges
+        new_edge = Edge(vertex_a, vertex_b, new_node_a, new_node_b)
+        print(f"Created a new edge: {new_edge}")
+
+        self.registry.append(new_edge)
+
+        update_edges_from_new_edge(new_edge, cur)
 
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer
             below Node start_id. (Default is the root Node) '''
         # This only shows the id, not the rectangles
         def walk(node):
-            if node.a is None and node.b is None:
+            if node.child_a is None and node.child_b is None:
                 return [node.id]
             else:
-                return walk(node.a) + walk(node.b)
+                return walk(node.child_a) + walk(node.child_b)
 
         return set(walk(self.get(start_id)))
 
-    def show(self):
-        ''' Display the Tree '''
-        img_size = self.canvas.dims + 1
+    def add_to_draw(self, draw, highlight=None, highlight_color=None, labels=None, color=None, width=None):
+        ''' Draw the Tree onto a provided PIL Draw object '''
 
-        img = Image.new("RGBA", img_size.as_tuple(), "black")
+        highlighted = []
+
+        if highlight:
+            for entry in highlight:
+                if isinstance(entry, int):
+                    highlighted.append(self.get(entry))
+                else:
+                    highlighted.append(entry)
+
+        self.registry.add_to_draw(draw, highlighted, highlight_color, labels, color, width)
+
+    def show(self, highlight=None, highlight_color=None, labels=None, color=None, width=None):
+        ''' Display the Tree '''
+        img_size = self.canvas + 1
+
+        img = Image.new("RGBA", img_size.as_tuple(), "green")
 
         draw = ImageDraw.Draw(img)
 
-        self.add_to_draw(draw)
-
-        for edge in self.registry:
-            # All Edges are pink
-            # Color all Edges tracked in the registry in green
-            draw.line(edge.line.as_tuples(), fill="red", width=4)
-
-            if edge.twin is not None:
-                # Color all shared Edges blue
-                draw.line(edge.line.as_tuples(), fill="lightgreen", width=2)
-                # Connect the centroids of adjacent Rectangles
-                #print("Drawing line across edge {}".format(edge))
-                centroid_a = edge.node.centroid()
-                centroid_b = edge.twin.node.centroid()
-                draw.line((centroid_a.as_tuple(), centroid_b.as_tuple()), fill="black")
+        self.add_to_draw(draw, highlight, highlight_color, labels, color, width)
 
         img.show()
-
-    def add_to_draw(self, draw):
-        ''' Draw the Tree onto a provided PIL Draw object '''
-        def draw_all(cur):
-            if cur is None:
-                return
-            if not cur.a and not cur.b:
-                #only draw leaf nodes
-                cur.rect.add_to_draw(draw)
-
-            draw_all(cur.a)
-            draw_all(cur.b)
-
-        draw_all(self.root)
 
     def __repr__(self):
         #TODO Use Cody's __repr__ for this

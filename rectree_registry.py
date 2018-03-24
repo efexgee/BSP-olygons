@@ -8,8 +8,7 @@ class EdgeRegistry(UserList):
     ''' A list of Edges that can be addressed by their LineSegments '''
 
     _DEFAULT_BACKGROUND_COLOR = "white"
-    _DEFAULT_LINE_HIGHLIGHT_COLOR = "pink"
-    _CANVAS_PADDING = 10
+    _DEFAULT_HIGHLIGHT_COLOR = "pink"
 
     def _get_edges_by_vertex(self, vertex):
         ''' [Helper for .get_edges()] Return all Edges which contain the vertex '''
@@ -25,7 +24,6 @@ class EdgeRegistry(UserList):
             raise KeyError(f"Vertex {vertex} is not in {self}")
 
     def _get_edges_by_node(self, node):
-        #TODO this is too promiscuous? -- WTF?
         ''' [Helper for .get_edges()] Return the Edges which contain the Node '''
         edges = []
 
@@ -67,7 +65,7 @@ class EdgeRegistry(UserList):
         if width:
             args["width"] = width
 
-        img_size = self.get_canvas_size()
+        img_size = self.canvas_size()
 
         img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
         draw = ImageDraw.Draw(img)
@@ -75,83 +73,48 @@ class EdgeRegistry(UserList):
 
         img.show()
 
-    def add_to_draw_highlighted(self, targets, labels=None, highlight=_DEFAULT_LINE_HIGHLIGHT_COLOR, color=None, width=None):
-        #TODO this should be an option for the regular add and show methods?
-        #TODO implement!
-        raise NotImplementedError("Yeah, no.")
-
-    def show_highlighted(self, targets, labels=None, highlight=_DEFAULT_LINE_HIGHLIGHT_COLOR, color=None, width=None):
-        ''' Show all the Edges but highlight specific Edges or those
-            bounding a Node '''
-        args = {}
-
-        if color:
-            args["color"] = color
-        if width:
-            args["width"] = width
-        if labels:
-            args["labels"] = labels
-
-        img_size = self.get_canvas_size()
-
-        img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
-        draw = ImageDraw.Draw(img)
-
-        # Draw all the Edges
-        self.add_to_draw(draw, **args)
-
-        # Overlay the highlighted elements
-        #TODO this HAS to be like **** at least!
-        if not isinstance(targets, list):
-            targets = [targets]
-
-        for target in targets:
-            #TODO why does this type check not work?!
-            if isinstance(target, Edge):
-                target.add_to_draw(draw, color=highlight)
-            elif isinstance(target, Node):
-                self.add_node_to_draw(target, draw, color=highlight)
-            else:
-                raise TypeError(f"Can't highlight Edges by {type(target)}: {target}")
-
-        img.show()
-
-    def add_to_draw(self, draw, labels=None, color=None, width=None):
+    def add_to_draw(self, draw, highlight=None, highlight_color=None, labels=None, color=None, width=None):
         ''' Add all Edges to a PIL Draw object '''
-        args = {}
 
-        if color:
-            args["color"] = color
-        if width:
-            args["width"] = width
-        if labels:
-            args["labels"] = labels
+        highlight_color = EdgeRegistry._DEFAULT_HIGHLIGHT_COLOR if highlight_color is None else highlight_color
+
+        highlighted_edges = []
+
+        #HELP is this if, for goofy?
+        if highlight:
+            #HELP [*var] or list(var)?
+            #HELP still don't know how to expand this
+            for highlighted in [*highlight]:
+                if isinstance(highlighted, Edge):
+                    #HELP did we just say not to use .append? I think not
+                    highlighted_edges.append(highlighted)
+                elif isinstance(highlighted, Node):
+                    highlighted_edges += self._get_edges_by_node(highlighted)
+                else:
+                    raise TypeError(f"Can't highlight Edges by type {type(target)}: {target}")
 
         for edge in self:
             #print(f"EdgeRegistry: adding {edge} to {draw}")
-            edge.add_to_draw(draw, **args)
+            if edge in highlighted_edges:
+                color = highlight_color
+            else:
+                color = None
 
-    def show(self, labels=None, color=None, width=None):
+            edge.add_to_draw(draw, labels, color, width)
+
+    def show(self, highlight=None, highlight_color=None, labels=None, color=None, width=None):
         ''' Display all the Edges '''
-        args = {}
 
-        if color:
-            args["color"] = color
-        if width:
-            args["width"] = width
-        if labels:
-            args["labels"] = labels
-
-        img_size = self.get_canvas_size()
+        img_size = self.canvas_size()
 
         img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
         draw = ImageDraw.Draw(img)
 
-        self.add_to_draw(draw, **args)
+        self.add_to_draw(draw, highlight, highlight_color, labels, color, width)
 
         img.show()
 
-    def get_canvas_size(self):
+    def canvas_size(self):
         ''' Return the size an Image has to be to fit all the Edges '''
         #TODO Maintain on the fly?
         max_x = 0
@@ -165,19 +128,7 @@ class EdgeRegistry(UserList):
 
         assert max_x * max_y > 0, f"Canvas size can't have a zero in it: ({max_x}, {max_y})"
             
-        return XY(max_x, max_y) + EdgeRegistry._CANVAS_PADDING
-
-    def __contains__(self, line):
-        ''' Check whether LineSegment is in any of the Edges of the registry '''
-        found = False
-
-        for edge in self:
-            if edge.line == line:
-                if not found:
-                    found = True
-                else:
-                    raise UserWarning(f"Found another match for {line} in {self}: {edge}")
-        return found
+        return XY(max_x, max_y)
 
     def __repr__(self):
         output = ""

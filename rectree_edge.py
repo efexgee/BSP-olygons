@@ -3,7 +3,7 @@
 #TODO check private attributes and methods in all modules
 
 from PIL import Image, ImageDraw
-from xy import *
+from rectree_vertex import *
 from label import *
 
 class Edge():
@@ -14,6 +14,7 @@ class Edge():
     _DEFAULT_BACKGROUND_COLOR = "white"
     _DEFAULT_LINE_COLOR = "black"
     _DEFAULT_LINE_WIDTH = 2
+    _DEFAULT_SHOW_LABELS = True
 
     def __init__(self, tail, head, left_node, right_node):
         self._tail = None
@@ -30,25 +31,37 @@ class Edge():
         ''' Check whether Edge is part of a Node '''
         return node in (self._left_node, self._right_node)
 
-    def split(self, point):
-        ''' Split Edge at point XY and return two new Edges
-            which have the same associated Nodes '''
+    def split(self, percentage):
+        #TODO should this support relative to caller?
+        ''' Insert a new vertex percentage of the way from tail
+        to head and return two new edges '''
 
-        raise NotImplemented(".split() is currently broken")
+        #TODO I could use my Line module to do that line math?
 
-        try:
-            rear_segment, front_segment = super().split(point)
-        #TODO different ways to handle re-raising
-        except KeyError:
-            raise KeyError(f"{point} is not on {edge}")
-        except ValueError as e:
-            raise ValueError(e.message.replace("LineSegment", "Edge"))
+        start = self._tail
+        end = self._head
 
-        raise NotImplemented("split won't work now")
-        rear_edge = Edge(rear_segment, edge._left_node, edge._right_node)
-        front_edge = Edge(front_segment, edge._left_node, edge._right_node)
+        multiplier = (100 - percentage) / 100
 
-        return rear_edge, front_edge
+        if start._x == end._x:
+            # This edge is vertical and must be handled differently
+            print(f"{self} is vertical")
+            new_y = start._y + (round((end._y - start._y) * multiplier))
+            new_vertex = Vertex(start._x, new_y)
+        else:
+            # Cast to XY so we can get negative values
+            rise_run = XY(end.as_tuple()) - XY(start.as_tuple())
+            new_vertex = Vertex(start + (rise_run * multiplier))
+            print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")
+
+        tail_segment = Edge(start, new_vertex, self._left_node, self._right_node)
+        head_segment = Edge(new_vertex, end, self._left_node, self._right_node)
+
+        return tail_segment, new_vertex, head_segment
+
+    def disconnect(self):
+        self._tail.disconnect(self)
+        self._head.disconnect(self)
 
     def replace(self, old_node, new_node):
         ''' Replace a Node associated with an Edge
@@ -62,8 +75,7 @@ class Edge():
             #TODO custom exception or ValueError as last resort
             raise KeyError(f"{old_node} not attached to {self}")
 
-    def get_other_vertex(self, caller):
-        #TODO get_blah() vs. plain blah()?
+    def other_vertex(self, caller):
         if caller is self._tail:
             return self._head
         elif caller is self._head:
@@ -72,7 +84,7 @@ class Edge():
             #TODO wrong exception type; see above
             raise KeyError(f"{caller} is not part of {self}")
 
-    def get_rel_side(self, side, caller):
+    def rel_side(self, side, caller):
         ''' Return a node as seen from the referrer POV '''
         if side == "right":
             if caller is self._tail:
@@ -88,7 +100,7 @@ class Edge():
             raise ValueError(f"{caller} is neither {self._tail} nor {self._head}")
 
     def vertices(self):
-        #TODO just to avoid touching the privates. too many methods?
+        #TODO use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
 
     def _connect_from(self, vertex):
@@ -97,7 +109,6 @@ class Edge():
         self._tail = vertex
 
     def _connect_to(self, vertex):
-        #TODO this one should never get used, I think
         assert not self._head, f"_head of {self} is already set: {self._head}"
         self._head = vertex
 
@@ -105,8 +116,13 @@ class Edge():
         self._connect_to(vertex)
         vertex._connect(self)
 
-    def add_to_draw(self, draw, labels=False, color=_DEFAULT_LINE_COLOR, width=_DEFAULT_LINE_WIDTH):
+    def add_to_draw(self, draw, labels=None, color=None, width=None):
         ''' Add Edge to the specified PIL draw object '''
+
+        #HELP wait, is this how this goes? this is hideous
+        labels = Edge._DEFAULT_SHOW_LABELS if labels is None else labels
+        color = Edge._DEFAULT_LINE_COLOR if color is None else color
+        width = Edge._DEFAULT_LINE_WIDTH if width is None else width
 
         #print(f"Edge: adding {self} in {color}")
         draw.line((self._tail.as_tuple(), self._head.as_tuple()), fill=color, width=width)
@@ -119,11 +135,11 @@ class Edge():
             if self._right_node:
                 #print(f"Labeling with {color} {self._right_node.id}")
                 r_label = label_loc_xy(tail_coords, head_coords, 10)
-                draw.text(r_label.as_tuple(), self._right_node.id, color)
+                draw.text(r_label.as_tuple(), str(self._right_node.id), color)
             if self._left_node:
                 #print(f"Labeling with {color} {self._left_node.id}")
                 l_label = label_loc_xy(tail_coords, head_coords, -10)
-                draw.text(l_label.as_tuple(), self._left_node.id, color)
+                draw.text(l_label.as_tuple(), str(self._left_node.id), color)
 
     def show(self, labels=None, color=None, width=None):
         ''' Display the Edge '''
@@ -132,17 +148,7 @@ class Edge():
         img = Image.new("RGBA", img_size.as_tuple(), Edge._DEFAULT_BACKGROUND_COLOR)
         draw = ImageDraw.Draw(img)
 
-        args = {}
-        #TODO this doesn't feel right
-        if color:
-            args["color"] = color
-        if width:
-            args["width"] = width
-        if labels:
-            #TODO defaulting labels to None to keep only one default
-            args["labels"] = labels
-
-        self.add_to_draw(draw, **args)
+        self.add_to_draw(draw, labels, color, width)
 
         img.show()
 
@@ -161,20 +167,20 @@ class Edge():
         left_node = None
         right_node = None
 
-        if self.get_rel_side("left", vertex):
-            left_node = self.get_rel_side("left", vertex).id
-        if self.get_rel_side("right", vertex):
-            right_node = self.get_rel_side("right", vertex).id
+        if self.rel_side("left", vertex):
+            left_node = self.rel_side("left", vertex).id
+        if self.rel_side("right", vertex):
+            right_node = self.rel_side("right", vertex).id
 
         return f"{near._repr_coords()}-{left_node}|{right_node}-{far._repr_coords()}"
 
     def __repr__(self):
-        #TODO how do I deal with this?
-        left_node = None
-        right_node = None
 
+        left_node = None
         if self._left_node:
             left_node = self._left_node.id
+
+        right_node = None
         if self._right_node:
             right_node = self._right_node.id
 

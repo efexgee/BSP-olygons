@@ -13,52 +13,49 @@ class Node():
         # it doesn't cost much and can be super-useful
         self.parent = parent
         self.registry = registry
-        self.a = child_a
-        self.b = child_b
-
-    def add_polygon(self, vertices, edges):
-        #TODO just for testing
-        raise NotImplementedError("not sure I will even want this")
+        self.child_a = child_a
+        self.child_b = child_b
 
     def vertices(self):
-        #TODO [] vs list()
-        vertices = set()
+        #HELP switched to list so I didn't have to hash a mutable
+        vertices = []
 
         for edge in self.registry.get_edges(self):
-            vertices.update(set(edge.vertices()))
+            print(f"processing edge {edge}")
+            for vertex in edge.vertices():
+                if vertex not in vertices:
+                    print(f"adding edge {edge}")
+                    vertices += edge.vertices()
 
-        #TODO Don't return in special data types unless necessary?
-        return tuple(vertices)
+        return vertices
 
     def centroid(self):
         ''' Return the centroid of a Node '''
 
-        #TODO lists or sets? I think lists
         x = []
         y = []
 
-        #TODO map() or something?
         for vertex in self.vertices():
+            print(f"processing vertex {vertex}")
             x.append(vertex._x)
             y.append(vertex._y)
 
         return XY(round(mean(x)), round(mean(y)))
 
     def __repr__(self):
-        #TODO there must be a saner way to do this
         if self.parent is None:
             parent = " "
         else:
             parent = self.parent.id
 
-        if self.a is None:
+        if self.child_a is None:
             a = " "
         else:
-            a = self.a.id
+            a = self.child_a.id
 
-        if self.b is None:
+        if self.child_b is None:
             b = " "
         else:
-            b = self.b.id
+            b = self.child_b.id
 
         return f"({parent}) <- ({self.id}) -> ({a}) ({b})"
