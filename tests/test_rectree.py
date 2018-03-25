@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from rectree_edge import *
-from rectree_vertex import *
-from rectree_registry import *
-from rectree_node import *
-from rectree_tree import *
+from polytree.edge import *
+from polytree.vertex import *
+from polytree.registry import *
+from polytree.node import *
+from polytree.tree import *
 from random import choice
 
 img = Image.new("RGBA", (300, 300), "white")

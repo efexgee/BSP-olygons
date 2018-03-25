@@ -1,1 +1,0 @@
-libs/polygon_label/label.py

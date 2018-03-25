@@ -3,8 +3,8 @@
 #TODO check private attributes and methods in all modules
 
 from PIL import Image, ImageDraw
-from rectree_vertex import *
-from label import *
+from polytree.vertex import *
+from polytree.ext_label import *
 
 class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''

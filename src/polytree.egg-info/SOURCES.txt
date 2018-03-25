@@ -1,0 +1,17 @@
+setup.py
+src/polytree/__init__.py
+src/polytree/edge.py
+src/polytree/ext_drawtree.py
+src/polytree/ext_label.py
+src/polytree/line.py
+src/polytree/node.py
+src/polytree/rectangle.py
+src/polytree/registry.py
+src/polytree/tree.py
+src/polytree/vertex.py
+src/polytree/xy.py
+src/polytree.egg-info/PKG-INFO
+src/polytree.egg-info/SOURCES.txt
+src/polytree.egg-info/dependency_links.txt
+src/polytree.egg-info/requires.txt
+src/polytree.egg-info/top_level.txt

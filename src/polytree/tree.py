@@ -2,12 +2,12 @@
 
 #TODO how to pep8?
 
-from rectree_node import *
-from rectree_vertex import *
-from rectree_edge import *
-from rectree_registry import *
+from polytree.node import *
+from polytree.vertex import *
+from polytree.edge import *
+from polytree.registry import *
 from PIL import Image, ImageDraw
-from drawtree import drawtree
+from polytree.ext_drawtree import drawtree
 from random import sample
 
 #TODO functions without a home

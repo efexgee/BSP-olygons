@@ -3,11 +3,9 @@
 from PIL import Image, ImageDraw
 from random import choice
 
-from xy import *
-from line import *
-from rectree_rectangle import *
-from rectree_node import *
-from rectree_tree import *
+from polytree.xy import *
+from polytree.node import *
+from polytree.tree import *
 
 # TEST CODE #
 
@@ -25,27 +23,9 @@ five_hundred = hundred * 5
 eight_hundred = hundred * 8
 thousand = XY(1000)
 
-# Rectangles
-big_box = Rectangle(zero, eight_hundred)
-tiny_box = Rectangle(zero, ten)
-
 # something to draw on
 paper=Image.new("RGBA", (500, 500), "black")
 pic=ImageDraw.Draw(paper)
-big_box.add_to_draw(pic)
-
-# Rectangle trees
-boxwood = Tree(big_box)
-
-# LineSegments
-la = LineSegment(ten, (10,50))
-lb = LineSegment((10,50), fifty)
-lc = LineSegment(hundred, (10,100))
-ld = LineSegment((75,100), (20,100))
-le = LineSegment(fifty, (50,75))
-lf = LineSegment((80,100), (120,100))
-
-lines = (la, lb, lc, ld, le, lf)
 
 # functions
 def sprout(tree, num_splits, start_id=0, squarish=False):

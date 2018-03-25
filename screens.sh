@@ -1,22 +1,20 @@
 #!/bin/bash
 
-PY_FILES="
-xy
-"
-FILES="
-rectree*
-test_*
-"
-
 if [[ -z $STY ]]; then
     echo "Doesn't look like we're inside a screen session."
     exit 1
 fi
 
-for file in $PY_FILES; do
-    py_files+="$file.py "
-done
+EXCLUDES=\
+"setup.py
+__init__.py
+ext
+line.py
+test_line.py"
 
-for file in $py_files $FILES; do
-    screen -S $STY -X screen -t ${file/.py/} vim $file
+PY_FILES=$(find . -iname \*.py)
+
+for file in $(echo "$PY_FILES" | grep -v -f <(echo "$EXCLUDES")); do
+    screen_name=$(basename $file)
+    screen -S $STY -X screen -t ${screen_name/.py/} vim $file
 done

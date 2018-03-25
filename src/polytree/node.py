@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from xy import XY
+from polytree.xy import XY
 from statistics import mean
 
 class Node():

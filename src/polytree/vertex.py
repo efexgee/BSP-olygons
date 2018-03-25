@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from xy import *
+from polytree.xy import *
 
 class Vertex(XYCoord):
     def __init__(self, *args):
