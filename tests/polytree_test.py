@@ -31,10 +31,10 @@ print(f"e_spear: {e_spear}")
 print(f"e_poker: {e_poker}")
 print()
 
-print(f"v_butt: {v_butt}")
-print(f"v_face: {v_face}")
-print(f"v_top: {v_top}")
-print()
+#print(f"v_butt: {v_butt}")
+#print(f"v_face: {v_face}")
+#print(f"v_top: {v_top}")
+#print()
 
 v_bottom = Vertex(225, 280)
 v_top_right = Vertex(275, 80)
@@ -56,7 +56,7 @@ print()
 
 reg.extend((e_four, e_five, e_six, e_seven, e_eight))
 
-print(f"tri_L: {tri_L}")
+#print(f"tri_L: {tri_L}")
 
 reg.add_to_draw(draw)
 tri_L.centroid().add_to_draw(draw)
@@ -89,4 +89,11 @@ baum.split(0)
 
 def splits(tree, times):
     for _ in range(times):
-        tree.split(choice(list(tree.leaves())))
+        #tree.split(choice(list(tree.leaves())))
+        leaves = list(tree.leaves())
+        oldest = min(*leaves)
+        rnd_leaf = choice(leaves)
+
+        #target_node_id = choice((rnd_leaf, oldest))
+        target_node_id = oldest
+        tree.split(target_node_id)
