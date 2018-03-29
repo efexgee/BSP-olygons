@@ -116,12 +116,11 @@ class EdgeRegistry(UserList):
 
     def canvas_size(self):
         ''' Return the size an Image has to be to fit all the Edges '''
-        #TODO Maintain on the fly?
         max_x = 0
         max_y = 0
 
         # This is a very inefficient traversal
-        #TODO using max here seems fine, but maybe build a set?
+        #HELP using max here seems fine, but maybe build a set?
         for edge in self:
             max_x = max(max_x, edge._tail._x, edge._head._x)
             max_y = max(max_y, edge._tail._y, edge._head._y)

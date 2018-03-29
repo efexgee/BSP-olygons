@@ -24,7 +24,6 @@ class Vertex(XYCoord):
         edge._connect_from(self)
 
     def connect_inbound(self, edge):
-        #TODO should not be used?
         self._connect(edge)
         edge._connect_to(self)
 

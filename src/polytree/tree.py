@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 from polytree.ext_drawtree import drawtree
 from random import sample
 
-#TODO functions without a home
+### functions without a home ###
 
 def update_edges_from_new_edge(new_edge, old_node):
 
@@ -46,7 +46,7 @@ def track_next_edge(vertex, side, node):
             ##print(f"Found edge with {node} on {side} side: {edge}")
             next_edge = edge
             #DEBUG only
-            #TODO there would be a break somewhere around here
+            #RELEASE there would be a break somewhere around here
             found += 1
 
     assert found <= 1, f"Found more than 1 edge with {node} on the {side} side on {vertex}: {found} found"
@@ -56,14 +56,14 @@ def track_next_edge(vertex, side, node):
 
 def split_edge(edge, percentage, splitsies):
     edge_a, vertex, edge_b = edge.split(percentage)
-    print(f"Split {edge} into {edge_a} and {edge_b} about {vertex}")
+    #print(f"Split {edge} into {edge_a} and {edge_b} about {vertex}")
+    print(f"Split {edge} into {edge_a} and {edge_b}")
 
     edge.disconnect()
     splitsies.remove(edge)
     splitsies.extend((edge_a, edge_b))
 
-    #TODO better to return all the new items
-    return vertex
+    return edge_a, vertex, edge_b
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -71,7 +71,6 @@ class Tree():
     def __init__(self, dimensions):
         self.registry = EdgeRegistry()
 
-        #TODO have __init__ call add_node()?
         self.root = Node(0, None, self.registry)
 
         v_ul = Vertex(0,0)
@@ -121,7 +120,7 @@ class Tree():
         # Check if node exist
         #TODO should this be handled by .get()?
         if cur is None:
-            #TODO IndexError?
+            #TIDY IndexError?
             raise IndexError(f"Could not find Node {id}")
             return
 
@@ -131,7 +130,7 @@ class Tree():
             raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {cur}")
 
         edges = self.registry.get_edges(cur)
-        print(f"Found {len(edges)} edges associated with {cur}")
+        #print(f"Found {len(edges)} edges associated with {cur}")
 
         # Set default direction and check for valid direction
         if direction is None:
@@ -146,22 +145,24 @@ class Tree():
         edge_a, edge_b = sample(edges, 2)
         print(f"Chose two edges to split: {edge_a} & {edge_b}")
 
-        vertex_a = split_edge(edge_a, location, self.registry)
-        vertex_b = split_edge(edge_b, location, self.registry)
-        print(f"Created two new vertices: {vertex_a} & {vertex_b}")
+        #HELP Use which form?
+        _, vertex_a, _ = split_edge(edge_a, location, self.registry)
+        vertex_b = split_edge(edge_b, location, self.registry)[1]
+
+        #print(f"Created two new vertices: {vertex_a} & {vertex_b}")
 
         self.max_id += 1
         new_node_a = Node(self.max_id, cur, self.registry)
         self.max_id += 1
         new_node_b = Node(self.max_id, cur, self.registry)
-        print(f"Created two new nodes: {new_node_a} & {new_node_b}")
+        #print(f"Created two new nodes: {new_node_a} & {new_node_b}")
 
         cur.child_a = new_node_a
         cur.child_b = new_node_b
-        print(f"Updated child pointers on {cur}")
+        #print(f"Updated child pointers on {cur}")
 
         new_edge = Edge(vertex_a, vertex_b, new_node_a, new_node_b)
-        print(f"Created a new edge: {new_edge}")
+        #print(f"Created a new edge: {new_edge}")
 
         self.registry.append(new_edge)
 
@@ -209,11 +210,6 @@ class Tree():
         #TODO Use Cody's __repr__ for this
         # This only shows the id, not the rectangles
 
-        #DEBUG - print a blank like to make output OK in iPython
         print("\n") #for ipython
 
-        #draw_bst only prints to STDOUT so casting to str in order
-        # to satisfy the __repr__ requirement causes it to also
-        # print None after the tree
-        #TODO Have to alter drawtree.py
         return str(drawtree(self.root))

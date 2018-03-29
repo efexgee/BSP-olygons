@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#TODO check private attributes and methods in all modules
+#TIDY check private attributes and methods in all modules
 
 from PIL import Image, ImageDraw
 from polytree.vertex import *
@@ -45,14 +45,14 @@ class Edge():
 
         if start._x == end._x:
             # This edge is vertical and must be handled differently
-            print(f"{self} is vertical")
+            #print(f"{self} is vertical")
             new_y = start._y + (round((end._y - start._y) * multiplier))
             new_vertex = Vertex(start._x, new_y)
         else:
             # Cast to XY so we can get negative values
             rise_run = XY(end.as_tuple()) - XY(start.as_tuple())
             new_vertex = Vertex(start + (rise_run * multiplier))
-            print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")
+            #print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")
 
         tail_segment = Edge(start, new_vertex, self._left_node, self._right_node)
         head_segment = Edge(new_vertex, end, self._left_node, self._right_node)
@@ -72,7 +72,7 @@ class Edge():
         elif self._right_node == old_node:
             self._right_node = new_node
         else:
-            #TODO custom exception or ValueError as last resort
+            #TIDY custom exception or ValueError as last resort
             raise KeyError(f"{old_node} not attached to {self}")
 
     def other_vertex(self, caller):
@@ -81,7 +81,7 @@ class Edge():
         elif caller is self._head:
             return self._tail
         else:
-            #TODO wrong exception type; see above
+            #TIDY wrong exception type; see above
             raise KeyError(f"{caller} is not part of {self}")
 
     def rel_side(self, side, caller):
@@ -100,7 +100,7 @@ class Edge():
             raise ValueError(f"{caller} is neither {self._tail} nor {self._head}")
 
     def vertices(self):
-        #TODO use property if I want to fake an attribute ("descriptor")
+        #FEATURE use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
 
     def _connect_from(self, vertex):
@@ -160,7 +160,7 @@ class Edge():
             near = self._head
             far = self._tail
         else:
-            #TODO correct exception? need to find a reference on
+            #TIDY correct exception? need to find a reference on
             # python exception philosophy
             raise ValueError(f"{vertex} is not connected to {self}")
 

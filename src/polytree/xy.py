@@ -132,6 +132,7 @@ class XY():
     def __repr__(self):
         return f"({self.x},{self.y})"
 
+#TODO HELP This is a hilarious disaster!!!
 class XYCoord(XY):
     def __sub__(self, coord):
         ''' Subtract a XYCoord with a lower limit of 0 in the result ''' 
