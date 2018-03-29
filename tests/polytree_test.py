@@ -85,15 +85,22 @@ e_db = Edge(v_d, v_b, node_o, node_n)
 splitsies.extend((e_db,))
 
 baum = Tree(XY(800))
-baum.split(0)
+#baum.split(0)
 
-def splits(tree, times):
+def splits(tree, times, even=False):
     for _ in range(times):
         #tree.split(choice(list(tree.leaves())))
         leaves = list(tree.leaves())
-        oldest = min(*leaves)
+        #oldest = min(*leaves)
         rnd_leaf = choice(leaves)
 
-        #target_node_id = choice((rnd_leaf, oldest))
-        target_node_id = oldest
-        tree.split(target_node_id)
+        #target_node_id = oldest
+        target_node_id = rnd_leaf
+        tree.split(target_node_id, even=even)
+
+def test_oppo(tree):
+    node = tree.get(choice(list(baum.leaves())))
+    edge = node.get_rnd_edge()
+    op_edge = node.get_opp_edge(edge)
+
+    tree.show(labels=False,highlight=[edge,op_edge])

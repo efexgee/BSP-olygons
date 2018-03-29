@@ -91,7 +91,7 @@ class EdgeRegistry(UserList):
                 elif isinstance(highlighted, Node):
                     highlighted_edges += self._get_edges_by_node(highlighted)
                 else:
-                    raise TypeError(f"Can't highlight Edges by type {type(target)}: {target}")
+                    raise TypeError(f"Can't highlight Edges by type {type(highlighted)}: {highlighted}")
 
         for edge in self:
             #print(f"EdgeRegistry: adding {edge} to {draw}")

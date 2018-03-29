@@ -109,7 +109,7 @@ class Tree():
 
         return walk(self.root, id)
 
-    def split(self, id, direction=None, location=50):
+    def split(self, id, direction=None, location=50, even=False):
         ''' Split a Node into two Nodes, in direction, at percentage.
             Default direction is to split across the shorter
             dimension (random for squares), and at 50%. '''
@@ -129,9 +129,6 @@ class Tree():
             #TODO maybe this implicitly checks whether the Node exists?
             raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {cur}")
 
-        edges = self.registry.get_edges(cur)
-        #print(f"Found {len(edges)} edges associated with {cur}")
-
         # Set default direction and check for valid direction
         if direction is None:
             # If no direction is specified, split across the short dimension or
@@ -142,8 +139,14 @@ class Tree():
         if not direction.startswith(("v", "h")):
             raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
-        edge_a, edge_b = sample(edges, 2)
-        print(f"Chose two edges to split: {edge_a} & {edge_b}")
+        if even:
+            edge_a = cur.get_rnd_edge()
+            edge_b = cur.get_opp_edge(edge_a)
+        else:
+            #TODO HELP I think responsibilities are split funny now
+            edge_a, edge_b = sample(self.registry.get_edges(cur), 2)
+
+        #print(f"Chose two edges to split: {edge_a} & {edge_b}")
 
         #HELP Use which form?
         _, vertex_a, _ = split_edge(edge_a, location, self.registry)

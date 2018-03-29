@@ -28,6 +28,7 @@ class Vertex(XYCoord):
         edge._connect_to(self)
 
     def _repr_coords(self):
+        #TODO HELP why call this a _repr_ ?
         #TODO use a .coords() method?
         #TODO make castable to XY?
         return super().__repr__()

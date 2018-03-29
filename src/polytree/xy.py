@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from PIL import Image, ImageDraw
+from math import hypot
 
 class XY():
     ''' a pair of x and y values which represent either a
@@ -109,6 +110,12 @@ class XY():
             y = self.y - value
 
         return XY(x, y)
+
+    def magnitude(self):
+        return hypot(self._x, self._y)
+
+    def dot_product(self, vector):
+        return (self._x * vector._x) + (self._y * vector._y)
 
     def as_tuple(self):
         return (self.x, self.y)

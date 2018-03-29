@@ -31,12 +31,10 @@ class Edge():
         ''' Check whether Edge is part of a Node '''
         return node in (self._left_node, self._right_node)
 
-    def split(self, percentage):
+    def get_new_vertex(self, percentage):
+        #TODO this needs some refinement to make sure the
+        # point is actually on the line, not right next to it
         #TODO should this support relative to caller?
-        ''' Insert a new vertex percentage of the way from tail
-        to head and return two new edges '''
-
-        #TODO I could use my Line module to do that line math?
 
         start = self._tail
         end = self._head
@@ -54,8 +52,17 @@ class Edge():
             new_vertex = Vertex(start + (rise_run * multiplier))
             #print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")
 
-        tail_segment = Edge(start, new_vertex, self._left_node, self._right_node)
-        head_segment = Edge(new_vertex, end, self._left_node, self._right_node)
+        return new_vertex
+
+    def split(self, percentage):
+        #TODO should this support relative to caller?
+        ''' Insert a new vertex percentage of the way from tail
+        to head and return two new edges '''
+
+        new_vertex = self.get_new_vertex(percentage)
+
+        tail_segment = Edge(self._tail, new_vertex, self._left_node, self._right_node)
+        head_segment = Edge(new_vertex, self._head, self._left_node, self._right_node)
 
         return tail_segment, new_vertex, head_segment
 
