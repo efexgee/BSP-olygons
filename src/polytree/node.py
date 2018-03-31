@@ -5,11 +5,25 @@ from statistics import mean
 from random import choice
 from math import degrees, acos
 from polytree.edge import Edge
+from collections import UserList
+
+class Side(Edge):
+    ''' One side of a polygon '''
+
+    #HELP default to None or [] ?
+    def __init__(self, tail, head, edges=None):
+        # We're not using the side nodes so they're None
+        super().__init__(tail, head, None, None)
+
+        self.edges = edges
+
+    def __repr__(self):
+        return f"Tail: {self.tail}\nHead: {self.head}\nEdges: {super().__repr__()}"
 
 class Node():
     ''' node for a binary tree of Rectangles '''
 
-    def __init__(self, id, parent, registry, child_a=None, child_b=None):
+    def __init__(self, id, parent, registry, child_a=None, child_b=None, vertices=None):
         self.id = id
 
         #I don't think we ever use the parent pointer but
@@ -18,19 +32,12 @@ class Node():
         self.registry = registry
         self.child_a = child_a
         self.child_b = child_b
+        self.vertices = vertices
 
-    def vertices(self):
-        #HELP switched to list so I didn't have to hash a mutable
-        vertices = []
-
-        for edge in self.registry.get_edges(self):
-            #print(f"processing edge {edge}")
-            for vertex in edge.vertices():
-                if vertex not in vertices:
-                    #print(f"adding edge {edge}")
-                    vertices += edge.vertices()
-
-        return vertices
+    def add_vertices(self, vertices):
+        # Need to handle root Node creation at which point
+        # the Vertices are not defined yet
+        self.vertices = vertices
 
     def get_edges(self):
         return self.registry.get_edges(self)
@@ -94,6 +101,8 @@ class Node():
 
     def centroid(self):
         ''' Return the centroid of a Node '''
+
+        assert self.vertices is not None, "Node's vertices should never be None"
 
         x = []
         y = []

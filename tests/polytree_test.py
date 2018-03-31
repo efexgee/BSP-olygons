@@ -59,7 +59,7 @@ reg.extend((e_four, e_five, e_six, e_seven, e_eight))
 #print(f"tri_L: {tri_L}")
 
 reg.add_to_draw(draw)
-tri_L.centroid().add_to_draw(draw)
+#tri_L.centroid().add_to_draw(draw)
 
 # registry for split testing
 splitsies = EdgeRegistry()
