@@ -5,7 +5,8 @@
 from polytree.node import *
 from polytree.vertex import *
 from polytree.edge import *
-from polytree.registry import *
+#from polytree.registry import *
+from polytree.registry import EdgeRegistry
 from PIL import Image, ImageDraw
 from polytree.ext_drawtree import drawtree
 from random import sample
@@ -83,6 +84,7 @@ class Tree():
         e_brbl = Edge(v_br, v_bl, None, self.root)
         e_blul = Edge(v_bl, v_ul, None, self.root)
 
+        self.root.add_vertices([v_ul, v_ur, v_br, v_bl])
         self.registry.extend((e_ulur, e_urbr, e_brbl, e_blul))
 
         # the highest ID currently in the tree

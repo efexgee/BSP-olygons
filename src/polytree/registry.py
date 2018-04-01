@@ -28,7 +28,7 @@ class EdgeRegistry(UserList):
         edges = []
 
         for edge in self:
-            if edge.describes(node):
+            if edge.borders_node(node):
                 edges.append(edge)
 
         if edges:

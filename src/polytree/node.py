@@ -7,6 +7,8 @@ from math import degrees, acos
 from polytree.edge import Edge
 from collections import UserList
 
+from polytree.tree import track_next_edge
+
 class Side(Edge):
     ''' One side of a polygon '''
 
@@ -18,7 +20,7 @@ class Side(Edge):
         self.edges = edges
 
     def __repr__(self):
-        return f"Tail: {self.tail}\nHead: {self.head}\nEdges: {super().__repr__()}"
+        return f"Tail: {self._tail}\nHead: {self._head}\nEdges: {super().__repr__()}"
 
 class Node():
     ''' node for a binary tree of Rectangles '''
@@ -42,6 +44,45 @@ class Node():
     def get_edges(self):
         return self.registry.get_edges(self)
 
+    def get_sides(self):
+        starting_vertex = self.vertices[0]
+
+        sides = []
+
+        cur_vertex = starting_vertex
+
+        for edge in cur_vertex.edges:
+            #HELP Perl-ish overloading of booleans? **
+            our_side = edge.borders_node(self)
+            if our_side:
+                # We've determined a "handedness"
+                break
+
+        #HELP this always feel wrong :(
+        while True:
+            # We're building a new Side
+            #HELP can't build a Side because vertex stiching
+            # doesn't allow for changing...b/c Edge is immutable
+            side_edges = []
+
+            cur_edge = track_next_edge(cur_vertex, our_side, self)
+
+            side_edges.append(cur_edge)
+
+            next_vertex = cur_edge.other_vertex(cur_vertex)
+
+            if next_vertex in self.vertices:
+                # We have finished a Side
+                sides.append(Side(cur_vertex, next_vertex, side_edges))
+
+            if next_vertex is starting_vertex:
+                # We've circumscribed the polygon
+                break
+
+            cur_vertex = next_vertex
+
+        return sides
+
     #HELP how about this bizarre exclusion option?
     #HELP do I make the default an empty list to convey it's a list?
     def get_rnd_edge(self, exclude=[]):
@@ -57,6 +98,8 @@ class Node():
         return choice(edges)
 
     def get_opp_edge(self, edge):
+        # The "intuitively opposing" edge doesn't always
+        # make for the most right angle
 
         def angle_between(edge_a, edge_b):
             #print(f"Getting angle between edges {edge_a} and {edge_b}")
@@ -130,4 +173,4 @@ class Node():
         else:
             b = self.child_b.id
 
-        return f"({parent}) <- ({self.id}) -> ({a}) ({b})"
+        return f"({parent}) <- ({self.id}) -> ({a}) ({b}) : {' '.join([v._repr_coords() for v in self.vertices])}"

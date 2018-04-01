@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#TIDY check private attributes and methods in all modules
+#:TIDY check private attributes and methods in all modules
 
 from PIL import Image, ImageDraw
 from polytree.vertex import *
@@ -27,9 +27,14 @@ class Edge():
         self._left_node = left_node      # should only be changed via replace()
         self._right_node = right_node    # should only be changed via replace()
 
-    def describes(self, node):
+    def borders_node(self, node):
         ''' Check whether Edge is part of a Node '''
-        return node in (self._left_node, self._right_node)
+        if node is self._left_node:
+            return "left"
+        elif node is self._right_node:
+            return "right"
+        else:
+            return False
 
     def get_new_vertex(self, percentage):
         #TODO this needs some refinement to make sure the
