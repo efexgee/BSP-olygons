@@ -2,13 +2,12 @@
 
 #TODO how to pep8?
 
-from polytree.node import *
-from polytree.vertex import *
-from polytree.edge import *
-#from polytree.registry import *
 from polytree.registry import EdgeRegistry
+from polytree.node import Node
+from polytree.vertex import Vertex
+from polytree.xy import XY
+from polytree.edge import Edge
 from PIL import Image, ImageDraw
-from polytree.ext_drawtree import drawtree
 from random import sample
 
 ### functions without a home ###
@@ -55,14 +54,13 @@ def track_next_edge(vertex, side, node):
 
     return next_edge
 
-def split_edge(edge, percentage, splitsies):
+def split_edge(edge, percentage, registry):
     edge_a, vertex, edge_b = edge.split(percentage)
-    #print(f"Split {edge} into {edge_a} and {edge_b} about {vertex}")
-    print(f"Split {edge} into {edge_a} and {edge_b}")
+    print(f"    Split {edge} into {edge_a} & {edge_b} about {vertex.as_tuple()}")
 
     edge.disconnect()
-    splitsies.remove(edge)
-    splitsies.extend((edge_a, edge_b))
+    registry.remove(edge)
+    registry.extend((edge_a, edge_b))
 
     return edge_a, vertex, edge_b
 
@@ -117,7 +115,7 @@ class Tree():
             dimension (random for squares), and at 50%. '''
         cur = self.get(id)
 
-        print(f"\n=== Splitting id {id}:{cur} {direction}-wise (probably into Node {self.max_id + 1} and Node {self.max_id + 2})")
+        print(f"\n=== Splitting Node {id} {direction}-wise (probably into Node {self.max_id + 1} & Node {self.max_id + 2})")
 
         # Check if node exist
         #TODO should this be handled by .get()?
@@ -141,6 +139,8 @@ class Tree():
         if not direction.startswith(("v", "h")):
             raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
+        #TODO this was a check splitting across the narrow dimension
+        even = True
         if even:
             edge_a = cur.get_rnd_edge()
             edge_b = cur.get_opp_edge(edge_a)
@@ -148,26 +148,29 @@ class Tree():
             #TODO HELP I think responsibilities are split funny now
             edge_a, edge_b = sample(self.registry.get_edges(cur), 2)
 
-        #print(f"Chose two edges to split: {edge_a} & {edge_b}")
+        print(f"  Splitting on Edges {edge_a} & {edge_b}")
 
         #HELP Use which form?
         _, vertex_a, _ = split_edge(edge_a, location, self.registry)
         vertex_b = split_edge(edge_b, location, self.registry)[1]
 
-        #print(f"Created two new vertices: {vertex_a} & {vertex_b}")
+        print(f"  Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
+
+        #TODO Find which of the ancestor Node's Vertices each Node inherits
+
 
         self.max_id += 1
         new_node_a = Node(self.max_id, cur, self.registry)
         self.max_id += 1
         new_node_b = Node(self.max_id, cur, self.registry)
-        #print(f"Created two new nodes: {new_node_a} & {new_node_b}")
+        print(f"  Created two new nodes: {new_node_a} & {new_node_b}")
 
         cur.child_a = new_node_a
         cur.child_b = new_node_b
-        #print(f"Updated child pointers on {cur}")
+        print(f"  Updated child pointers on {cur}")
 
         new_edge = Edge(vertex_a, vertex_b, new_node_a, new_node_b)
-        #print(f"Created a new edge: {new_edge}")
+        print(f"  Created a new edge: {new_edge}")
 
         self.registry.append(new_edge)
 
@@ -213,8 +216,5 @@ class Tree():
 
     def __repr__(self):
         #TODO Use Cody's __repr__ for this
-        # This only shows the id, not the rectangles
 
-        print("\n") #for ipython
-
-        return str(drawtree(self.root))
+        return f"Leaves: {self.leaves()}"

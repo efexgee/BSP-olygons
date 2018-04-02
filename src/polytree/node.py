@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from polytree.xy import XY
-from statistics import mean
-from random import choice
-from math import degrees, acos
 from polytree.edge import Edge
-from collections import UserList
+from random import choice
+from polytree.xy import XY
+from math import degrees, acos
+#from statistics import mean
+#from collections import UserList
 
-from polytree.tree import track_next_edge
+#from polytree.tree import track_next_edge
 
 class Side(Edge):
     ''' One side of a polygon '''
@@ -173,4 +173,8 @@ class Node():
         else:
             b = self.child_b.id
 
-        return f"({parent}) <- ({self.id}) -> ({a}) ({b}) : {' '.join([v._repr_coords() for v in self.vertices])}"
+        if self.vertices:
+            vertices = "\n ".join([v.__repr__() for v in self.vertices])
+        else:
+            vertices = None
+        return f"({parent}) <- ({self.id}) -> ({a}) ({b}) :\n {vertices}"

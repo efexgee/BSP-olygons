@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from collections import UserList
-from polytree.edge import *
-from polytree.node import *
+from polytree.node import Node
+#from polytree.edge import Edge
 
 class EdgeRegistry(UserList):
     ''' A list of Edges that can be addressed by their LineSegments '''

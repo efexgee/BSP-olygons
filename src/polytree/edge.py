@@ -1,27 +1,25 @@
 #!/usr/bin/env python
 
-#:TIDY check private attributes and methods in all modules
+#TIDY check private attributes and methods in all modules
 
-from PIL import Image, ImageDraw
-from polytree.vertex import *
-from polytree.ext_label import *
+from polytree.line import Line
+from polytree.ext_label import label_loc_xy
+from polytree.vertex import Vertex
+#from PIL import Image, ImageDraw
 
 class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
 
-    # Padding when displaying Edges on their own
-    _CANVAS_PADDING = 10
-    _DEFAULT_BACKGROUND_COLOR = "white"
-    _DEFAULT_LINE_COLOR = "black"
-    _DEFAULT_LINE_WIDTH = 2
     _DEFAULT_SHOW_LABELS = True
 
     def __init__(self, tail, head, left_node, right_node):
+        #HELP are these only here to declare them?
+        #Needed if we use the connect methods below?
         self._tail = None
         self._head = None
 
-        tail.connect_outbound(self)
-        self.connect_into(head)
+        self.connect_tail(tail)
+        self.connect_head(head)
         # Forcing the user to explicitly specify None in the
         # case of an exterior edge by not providing defaults
         self._left_node = left_node      # should only be changed via replace()
@@ -41,23 +39,9 @@ class Edge():
         # point is actually on the line, not right next to it
         #TODO should this support relative to caller?
 
-        start = self._tail
-        end = self._head
+        new_point = Line(self._tail, self._head).find_point(percentage)
 
-        multiplier = (100 - percentage) / 100
-
-        if start._x == end._x:
-            # This edge is vertical and must be handled differently
-            #print(f"{self} is vertical")
-            new_y = start._y + (round((end._y - start._y) * multiplier))
-            new_vertex = Vertex(start._x, new_y)
-        else:
-            # Cast to XY so we can get negative values
-            rise_run = XY(end.as_tuple()) - XY(start.as_tuple())
-            new_vertex = Vertex(start + (rise_run * multiplier))
-            #print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")
-
-        return new_vertex
+        return Vertex(new_point)
 
     def split(self, percentage):
         #TODO should this support relative to caller?
@@ -65,15 +49,22 @@ class Edge():
         to head and return two new edges '''
 
         new_vertex = self.get_new_vertex(percentage)
+        print(f"      Created new vertex: {new_vertex}")
 
         tail_segment = Edge(self._tail, new_vertex, self._left_node, self._right_node)
         head_segment = Edge(new_vertex, self._head, self._left_node, self._right_node)
+        print(f"      Created new segments: {tail_segment} & {head_segment}")
+
+        print(f"      Updated Vertex: {new_vertex}")
 
         return tail_segment, new_vertex, head_segment
 
     def disconnect(self):
-        self._tail.disconnect(self)
-        self._head.disconnect(self)
+        # Disconnects itself from its Vertices
+        # It will usually also have to be deleted from
+        # an Edge Registry
+        self._tail.disconnect_from(self)
+        self._head.disconnect_from(self)
 
     def replace(self, old_node, new_node):
         ''' Replace a Node associated with an Edge
@@ -115,35 +106,34 @@ class Edge():
         #FEATURE use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
 
-    def _connect_from(self, vertex):
-        ''' Connect to a vertex '''
+    def connect_tail(self, vertex):
         assert not self._tail, f"_tail of {self} is already set: {self._tail}"
         self._tail = vertex
+        #HELP too much access? I think it's fine
+        vertex.edges.append(self)
 
-    def _connect_to(self, vertex):
+    def connect_head(self, vertex):
         assert not self._head, f"_head of {self} is already set: {self._head}"
         self._head = vertex
-
-    def connect_into(self, vertex):
-        self._connect_to(vertex)
-        vertex._connect(self)
+        vertex.edges.append(self)
 
     def add_to_draw(self, draw, labels=None, color=None, width=None):
         ''' Add Edge to the specified PIL draw object '''
+        #TODO do we need to handle label colors?
 
-        #HELP wait, is this how this goes? this is hideous
         labels = Edge._DEFAULT_SHOW_LABELS if labels is None else labels
-        color = Edge._DEFAULT_LINE_COLOR if color is None else color
-        width = Edge._DEFAULT_LINE_WIDTH if width is None else width
 
         #print(f"Edge: adding {self} in {color}")
-        draw.line((self._tail.as_tuple(), self._head.as_tuple()), fill=color, width=width)
+        line = Line(self._tail, self._head)
+
+        line.add_to_draw(draw, color, width)
 
         if labels:
             #print(f"Labeling {self}")
             tail_coords = self._tail
             head_coords = self._head
 
+            #TODO calculating label coordinates should be done in Line
             if self._right_node:
                 #print(f"Labeling with {color} {self._right_node.id}")
                 r_label = label_loc_xy(tail_coords, head_coords, 10)
@@ -184,7 +174,7 @@ class Edge():
         if self.rel_side("right", vertex):
             right_node = self.rel_side("right", vertex).id
 
-        return f"{near._repr_coords()}-{left_node}|{right_node}-{far._repr_coords()}"
+        return f"{near.as_tuple()}-{left_node}|{right_node}-{far.as_tuple()}"
 
     def __repr__(self):
 
@@ -196,4 +186,4 @@ class Edge():
         if self._right_node:
             right_node = self._right_node.id
 
-        return f"{self._tail._repr_coords()}-{left_node}|{right_node}-{self._head._repr_coords()}"
+        return f"{self._tail.as_tuple()}-{left_node}|{right_node}-{self._head.as_tuple()}"

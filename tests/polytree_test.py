@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-from polytree.edge import *
-from polytree.vertex import *
-from polytree.registry import *
-from polytree.node import *
-from polytree.tree import *
+from PIL import Image, ImageDraw
+from polytree.registry import EdgeRegistry
+from polytree.node import Node
+from polytree.vertex import Vertex
+from polytree.edge import Edge
+from polytree.tree import Tree
+from polytree.xy import XY
 from random import choice
 
 img = Image.new("RGBA", (300, 300), "white")

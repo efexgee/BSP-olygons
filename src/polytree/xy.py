@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from PIL import Image, ImageDraw
 from math import hypot
+#from PIL import Image, ImageDraw
 
 class XY():
     ''' a pair of x and y values which represent either a
@@ -35,7 +35,7 @@ class XY():
             self.x = x.x
             self.y = x.y
         else:
-            raise TypeError(f"Arguments aren't int or tuple: x={x} y={y}")
+            raise TypeError(f"Can't interpret argument types: x={type(x)} y={(y)}")
 
     @property
     def x(self):

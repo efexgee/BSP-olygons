@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from polytree.xy import *
+from polytree.xy import XYCoord
+from termcolor import colored
 
 class Vertex(XYCoord):
     def __init__(self, *args):
@@ -8,31 +9,24 @@ class Vertex(XYCoord):
 
         self.edges = []
 
-    def _connect(self, edge):
-        ''' Connect to an Edge '''
-        self.edges.append(edge)
-
-    def disconnect(self, edge):
+    def disconnect_from(self, edge):
+        #HELP privatize?
+        # This is usually called from within Edge
         try:
             self.edges.remove(edge)
         except:
             raise ValueError(f"{edge} is not connected to {self}")
         
-    def connect_outbound(self, edge):
-        ''' Connect to an Edge and have it connect to Vertex '''
-        self._connect(edge)
-        edge._connect_from(self)
+    def connect_as_tail(self, edge):
+        self.edges.append(edge)
+        edge.connect_tail(self)
 
-    def connect_inbound(self, edge):
-        self._connect(edge)
-        edge._connect_to(self)
-
-    def _repr_coords(self):
-        #TODO HELP why call this a _repr_ ?
-        #TODO use a .coords() method?
-        #TODO make castable to XY?
-        return super().__repr__()
+    def connect_as_head(self, edge):
+        self.edges.append(edge)
+        edge.connect_head(self)
 
     def __repr__(self):
         #TODO \n in f-string works just fine
-        return "{}\n{}".format(super().__repr__(), '\n'.join(["\t{}".format(edge._rel_repr(self)) for edge in self.edges]))
+        #return "{}\n{}".format(super().__repr__(), '\n'.join(["\t{}".format(edge._rel_repr(self)) for edge in self.edges]))
+        edges = " ".join([e._rel_repr(self) for e in self.edges])
+        return f"{colored(super().__repr__(), 'yellow')}: {edges}"

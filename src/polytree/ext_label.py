@@ -1,11 +1,9 @@
 import logging
 
 import numpy as np
-from polytree.xy import *
-
+from polytree.xy import XY
 
 LOGGER = logging.getLogger("label.py")
-
 
 def label_location(start, end, distance=0.1):
     """
