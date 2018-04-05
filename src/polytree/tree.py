@@ -150,9 +150,8 @@ class Tree():
 
         print(f"  Splitting on Edges {edge_a} & {edge_b}")
 
-        #HELP Use which form?
         _, vertex_a, _ = split_edge(edge_a, location, self.registry)
-        vertex_b = split_edge(edge_b, location, self.registry)[1]
+        _, vertex_b, _ = split_edge(edge_b, location, self.registry)
 
         print(f"  Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
 

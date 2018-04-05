@@ -13,7 +13,6 @@ class Edge():
     _DEFAULT_SHOW_LABELS = True
 
     def __init__(self, tail, head, left_node, right_node):
-        #HELP are these only here to declare them?
         #Needed if we use the connect methods below?
         self._tail = None
         self._head = None
@@ -109,7 +108,7 @@ class Edge():
     def connect_tail(self, vertex):
         assert not self._tail, f"_tail of {self} is already set: {self._tail}"
         self._tail = vertex
-        #HELP too much access? I think it's fine
+        #TODO make this a method on vertex
         vertex.edges.append(self)
 
     def connect_head(self, vertex):

@@ -10,7 +10,6 @@ class Vertex(XYCoord):
         self.edges = []
 
     def disconnect_from(self, edge):
-        #HELP privatize?
         # This is usually called from within Edge
         try:
             self.edges.remove(edge)

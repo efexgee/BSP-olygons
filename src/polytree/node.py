@@ -12,7 +12,6 @@ from math import degrees, acos
 class Side(Edge):
     ''' One side of a polygon '''
 
-    #HELP default to None or [] ?
     def __init__(self, tail, head, edges=None):
         # We're not using the side nodes so they're None
         super().__init__(tail, head, None, None)
@@ -52,16 +51,16 @@ class Node():
         cur_vertex = starting_vertex
 
         for edge in cur_vertex.edges:
-            #HELP Perl-ish overloading of booleans? **
+            #TODO this is not disastrous, but very not clear
+            # the overloading boolean
             our_side = edge.borders_node(self)
             if our_side:
                 # We've determined a "handedness"
                 break
 
-        #HELP this always feel wrong :(
         while True:
             # We're building a new Side
-            #HELP can't build a Side because vertex stiching
+            #HELP can't build a Side because vertex stitching
             # doesn't allow for changing...b/c Edge is immutable
             side_edges = []
 
@@ -84,8 +83,7 @@ class Node():
         return sides
 
     #HELP how about this bizarre exclusion option?
-    #HELP do I make the default an empty list to convey it's a list?
-    def get_rnd_edge(self, exclude=[]):
+    def get_rnd_edge(self, exclude=None):
         edges = self.get_edges()
 
         #print(f"edges = {edges}")
@@ -103,7 +101,6 @@ class Node():
 
         def angle_between(edge_a, edge_b):
             #print(f"Getting angle between edges {edge_a} and {edge_b}")
-            #TODO HELP XY-casting is hack for hilarious XYCoord disaster
             vector_a = XY(edge_a._head) - XY(edge_a._tail)
             vector_b = XY(edge_b._head) - XY(edge_b._tail)
             #print(f"Getting angle between vectors {vector_a} (mag={vector_a.magnitude()}) and {vector_b} (mag={vector_b.magnitude()})")

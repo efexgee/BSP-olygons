@@ -31,7 +31,6 @@ class Line():
             new_point = XY(start._x, new_y)
         else:
             # Cast to XY so we can get negative values
-            #HELP this is very awkward casting
             rise_run = XY(end.as_tuple()) - XY(start.as_tuple())
             new_point = XY(start + (rise_run * multiplier))
             #print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")

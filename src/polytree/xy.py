@@ -15,6 +15,7 @@ class XY():
 
     #MAYBE try to implement iterator so XY can be used as a tuple
 
+    #TODO rename x and y
     def __init__(self, x, y=None):
         #MAYBE Can I check for "isindexable"?
         # is container? from abstract classes (wwad)
@@ -31,7 +32,6 @@ class XY():
             else:
                 self.y = y
         elif isinstance(x, XY):
-            #HELP is this OK?
             self.x = x.x
             self.y = x.y
         else:
@@ -139,7 +139,12 @@ class XY():
     def __repr__(self):
         return f"({self.x},{self.y})"
 
-#TODO HELP This is a hilarious disaster!!!
+#TODO both diffs and coords are subs of XY
+# coord init setters enforce positive values
+# neg will throw exception
+# return on math methods depends on types:
+# coord + diff = coord, coord - coord = diff
+
 class XYCoord(XY):
     def __sub__(self, coord):
         ''' Subtract a XYCoord with a lower limit of 0 in the result ''' 

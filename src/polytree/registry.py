@@ -80,13 +80,9 @@ class EdgeRegistry(UserList):
 
         highlighted_edges = []
 
-        #HELP is this if, for goofy?
         if highlight:
-            #HELP [*var] or list(var)?
-            #HELP still don't know how to expand this
-            for highlighted in [*highlight]:
+            for highlighted in highlight: 
                 if isinstance(highlighted, Edge):
-                    #HELP did we just say not to use .append? I think not
                     highlighted_edges.append(highlighted)
                 elif isinstance(highlighted, Node):
                     highlighted_edges += self._get_edges_by_node(highlighted)
@@ -120,7 +116,6 @@ class EdgeRegistry(UserList):
         max_y = 0
 
         # This is a very inefficient traversal
-        #HELP using max here seems fine, but maybe build a set?
         for edge in self:
             max_x = max(max_x, edge._tail._x, edge._head._x)
             max_y = max(max_y, edge._tail._y, edge._head._y)
