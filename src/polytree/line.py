@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+from PIL import Image, ImageDraw
 from polytree.xy import XY
-#from PIL import Image, ImageDraw
+from polytree.ext_label import label_loc_xy
 
 class Line():
+
     # Padding when displaying Lines on their own
     _CANVAS_PADDING = 10
     _DEFAULT_BACKGROUND_COLOR = "white"
@@ -31,13 +33,22 @@ class Line():
             new_point = XY(start._x, new_y)
         else:
             # Cast to XY so we can get negative values
+            #HELP this is very awkward casting
             rise_run = XY(end.as_tuple()) - XY(start.as_tuple())
             new_point = XY(start + (rise_run * multiplier))
             #print(f"{start} + ({rise_run} * {multiplier}) = {new_vertex}")
 
         return new_point
 
-    def vertices(self):
+    def label_coords(self, side):
+        if side == "right":
+            offset = 10
+        elif side == "left":
+            offset = -10
+
+        return label_loc_xy(self._tail, self._head, offset)
+
+    def end_points(self):
         #FEATURE use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
 

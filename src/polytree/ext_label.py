@@ -1,7 +1,7 @@
 import logging
 
 import numpy as np
-#from polytree.xy import XY
+from polytree.xy import XY
 
 #TODO can I uncomment the assertions now?
 

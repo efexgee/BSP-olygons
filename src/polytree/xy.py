@@ -13,6 +13,9 @@ class XY():
     _DEFAULT_COLOR = "black"
     _DEFAULT_BACKGROUND_COLOR = "white"
 
+    # Maximum number of digits in x or y (for printing)
+    _COORD_PADDING = 4
+
     #MAYBE try to implement iterator so XY can be used as a tuple
 
     #TODO rename x and y
@@ -137,7 +140,7 @@ class XY():
         img.show()
 
     def __repr__(self):
-        return f"({self.x},{self.y})"
+        return f"({self.x: {XY._COORD_PADDING}},{self.y: {XY._COORD_PADDING}})"
 
 #TODO both diffs and coords are subs of XY
 # coord init setters enforce positive values

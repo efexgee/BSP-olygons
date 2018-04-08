@@ -2,6 +2,7 @@
 
 from collections import UserList
 from polytree.node import Node
+from polytree.xy import XY
 #from polytree.edge import Edge
 
 class EdgeRegistry(UserList):
