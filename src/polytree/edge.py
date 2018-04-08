@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 #TIDY check private attributes and methods in all modules
+from termcolor import colored
 
 from polytree.line import Line
 from polytree.ext_label import label_loc_xy
@@ -24,14 +25,18 @@ class Edge():
         self._left_node = left_node      # should only be changed via replace()
         self._right_node = right_node    # should only be changed via replace()
 
+    #HELP call it borders_node(node) or borders(node)
     def borders_node(self, node):
         ''' Check whether Edge is part of a Node '''
+        return node in (self._left_node, self._right_node)
+
+    def side_of_node(self, node):
         if node is self._left_node:
             return "left"
         elif node is self._right_node:
             return "right"
         else:
-            return False
+            assert False, f"{node} is not on {self}"
 
     def get_new_vertex(self, percentage):
         #TODO this needs some refinement to make sure the
@@ -88,18 +93,21 @@ class Edge():
 
     def rel_side(self, side, caller):
         ''' Return a node as seen from the referrer POV '''
+        #print(f"Looking for {id(caller)} among {id(self._right_node)} and {id(self._left_node)}")
         if side == "right":
+            #print(f"Comparing to {id(self._right_node)}")
             if caller is self._tail:
                 return self._right_node
             else:
                 return self._left_node
         elif side == "left":
+            #print(f"Comparing to {id(self._left_node)}")
             if caller is self._tail:
                 return self._left_node
             else:
                 return self._right_node
         else:
-            raise ValueError(f"{caller} is neither {self._tail} nor {self._head}")
+            raise ValueError(f"{caller} {colored('is neither','red')}\n{self._tail} {colored('nor','red')}\n{self._head}")
 
     def vertices(self):
         #FEATURE use property if I want to fake an attribute ("descriptor")
@@ -108,13 +116,12 @@ class Edge():
     def connect_tail(self, vertex):
         assert not self._tail, f"_tail of {self} is already set: {self._tail}"
         self._tail = vertex
-        #TODO make this a method on vertex
-        vertex.edges.append(self)
+        vertex.add_edge(self)
 
     def connect_head(self, vertex):
         assert not self._head, f"_head of {self} is already set: {self._head}"
         self._head = vertex
-        vertex.edges.append(self)
+        vertex.add_edge(self)
 
     def add_to_draw(self, draw, labels=None, color=None, width=None):
         ''' Add Edge to the specified PIL draw object '''
@@ -132,14 +139,13 @@ class Edge():
             tail_coords = self._tail
             head_coords = self._head
 
-            #TODO calculating label coordinates should be done in Line
             if self._right_node:
                 #print(f"Labeling with {color} {self._right_node.id}")
-                r_label = label_loc_xy(tail_coords, head_coords, 10)
+                r_label = line.label_coords("right")
                 draw.text(r_label.as_tuple(), str(self._right_node.id), color)
             if self._left_node:
                 #print(f"Labeling with {color} {self._left_node.id}")
-                l_label = label_loc_xy(tail_coords, head_coords, -10)
+                l_label = line.label_coords("left")
                 draw.text(l_label.as_tuple(), str(self._left_node.id), color)
 
     def show(self, labels=None, color=None, width=None):
@@ -173,7 +179,7 @@ class Edge():
         if self.rel_side("right", vertex):
             right_node = self.rel_side("right", vertex).id
 
-        return f"{near.as_tuple()}-{left_node}|{right_node}-{far.as_tuple()}"
+        return f"{colored(str(near.as_tuple()),'magenta')}-{left_node}|{right_node}-{colored(str(far.as_tuple()),'magenta')}"
 
     def __repr__(self):
 
@@ -185,4 +191,4 @@ class Edge():
         if self._right_node:
             right_node = self._right_node.id
 
-        return f"{self._tail.as_tuple()}-{left_node}|{right_node}-{self._head.as_tuple()}"
+        return f"{colored(str(self._tail.as_tuple()),'magenta')}-{left_node}|{right_node}-{colored(str(self._head.as_tuple()),'magenta')}"
