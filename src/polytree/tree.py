@@ -8,61 +8,8 @@ from polytree.vertex import Vertex
 from polytree.xy import XY
 from polytree.edge import Edge
 from PIL import Image, ImageDraw
-from random import sample
-
-### functions without a home ###
-
-def update_edges_from_new_edge(new_edge, old_node):
-
-    start_vertex = new_edge._head
-    stop_vertex = new_edge._tail
-
-    relabel_edges(start_vertex, stop_vertex, "right", old_node, new_edge._right_node)
-    relabel_edges(start_vertex, stop_vertex, "left", old_node, new_edge._left_node)
-
-def relabel_edges(start_vertex, stop_vertex, side, old_node, new_node):
-
-    cur_vertex = start_vertex
-
-    while True:
-        cur_edge = track_next_edge(cur_vertex, side, old_node)
-
-        cur_edge.replace(old_node, new_node)
-
-        cur_vertex = cur_edge.other_vertex(cur_vertex)
-
-        if cur_vertex is stop_vertex:
-            break
-
-def track_next_edge(vertex, side, node):
-    #DEBUG this counter is for debugging only - should be removed
-    found = 0
-
-    next_edge = None
-
-    for edge in vertex.edges:
-        #print(f"Looking at {edge._rel_repr(vertex)}")
-        if node is edge.rel_side(side, vertex):
-            ##print(f"Found edge with {node} on {side} side: {edge}")
-            next_edge = edge
-            #DEBUG only
-            #RELEASE there would be a break somewhere around here
-            found += 1
-
-    assert found <= 1, f"Found more than 1 edge with {node} on the {side} side on {vertex}: {found} found"
-    assert next_edge, f"Found no edges with {node} on the {side} side on {vertex}"
-
-    return next_edge
-
-def split_edge(edge, percentage, registry):
-    edge_a, vertex, edge_b = edge.split(percentage)
-    print(f"    Split {edge} into {edge_a} & {edge_b} about {vertex.as_tuple()}")
-
-    edge.disconnect()
-    registry.remove(edge)
-    registry.extend((edge_a, edge_b))
-
-    return edge_a, vertex, edge_b
+#from random import sample
+from polytree.functions import visit_polygon, split_edge, update_edges_from_new_edge
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -140,7 +87,6 @@ class Tree():
             raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
         #TODO this was a check splitting across the narrow dimension
-        even = True
         if even:
             edge_a = cur.get_rnd_edge()
             edge_b = cur.get_opp_edge(edge_a)
@@ -174,6 +120,8 @@ class Tree():
         self.registry.append(new_edge)
 
         update_edges_from_new_edge(new_edge, cur)
+
+        def update_
 
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer

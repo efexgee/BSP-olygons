@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
+from termcolor import colored
 from polytree.edge import Edge
 from random import choice
 from polytree.xy import XY
 from math import degrees, acos
+from polytree.functions import visit_polygon
+from polytree.vertex import Vertex
 #from statistics import mean
 #from collections import UserList
-
-#from polytree.tree import track_next_edge
 
 class Side(Edge):
     ''' One side of a polygon '''
@@ -19,7 +20,7 @@ class Side(Edge):
         self.edges = edges
 
     def __repr__(self):
-        return f"Tail: {self._tail}\nHead: {self._head}\nEdges: {super().__repr__()}"
+        return f" Tail: {colored(self._tail.as_tuple(),'cyan')} Head: {colored(self._head.as_tuple(),'cyan')}\nEdges: {super().__repr__()}"
 
 class Node():
     ''' node for a binary tree of Rectangles '''
@@ -48,37 +49,30 @@ class Node():
 
         sides = []
 
-        cur_vertex = starting_vertex
+        side_tail = starting_vertex
+        side_edges = []
 
-        for edge in cur_vertex.edges:
-            #TODO this is not disastrous, but very not clear
-            # the overloading boolean
-            our_side = edge.borders_node(self)
-            if our_side:
-                # We've determined a "handedness"
-                break
+        #HELP better name than thing?
+        def build_sides(thing):
+            # Visitor to send around the polygon
+            #HELP scope dealing with
+            nonlocal side_tail
+            if isinstance(thing, Vertex):
+                #print(f"Thing is a Vertex")
+                if thing in self.vertices:
+                    #print(f"Thing is a Vertex of Node")
+                    sides.append(Side(side_tail, thing, side_edges))
+                    side_tail = thing
+                    #HELP dealing with scope
+                    side_edges.clear()
+            elif isinstance(thing, Edge):
+                #print(f"Thing is an Edge")
+                side_edges.append(thing)
+            else:
+                assert False, f"{thing} is of type {type(thing)}"
 
-        while True:
-            # We're building a new Side
-            #HELP can't build a Side because vertex stitching
-            # doesn't allow for changing...b/c Edge is immutable
-            side_edges = []
 
-            cur_edge = track_next_edge(cur_vertex, our_side, self)
-
-            side_edges.append(cur_edge)
-
-            next_vertex = cur_edge.other_vertex(cur_vertex)
-
-            if next_vertex in self.vertices:
-                # We have finished a Side
-                sides.append(Side(cur_vertex, next_vertex, side_edges))
-
-            if next_vertex is starting_vertex:
-                # We've circumscribed the polygon
-                break
-
-            cur_vertex = next_vertex
+        visit_polygon(starting_vertex, self, build_sides)
 
         return sides
 
@@ -88,9 +82,10 @@ class Node():
 
         #print(f"edges = {edges}")
 
-        for exclusion in exclude:
-            #print(f"removing {edge}")
-            edges.remove(exclusion)
+        if exclude:
+            for exclusion in exclude:
+                #print(f"removing {edge}")
+                edges.remove(exclusion)
 
         #print(f"edges = {edges}")
         return choice(edges)
