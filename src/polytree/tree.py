@@ -9,7 +9,7 @@ from polytree.xy import XY
 from polytree.edge import Edge
 from PIL import Image, ImageDraw
 #from random import sample
-from polytree.functions import visit_polygon, split_edge, update_edges_from_new_edge
+from polytree.functions import split_edge, update_edges_from_new_edge, follow_edges
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -60,21 +60,21 @@ class Tree():
         ''' Split a Node into two Nodes, in direction, at percentage.
             Default direction is to split across the shorter
             dimension (random for squares), and at 50%. '''
-        cur = self.get(id)
+        split_node = self.get(id)
 
         print(f"\n=== Splitting Node {id} {direction}-wise (probably into Node {self.max_id + 1} & Node {self.max_id + 2})")
 
         # Check if node exist
         #TODO should this be handled by .get()?
-        if cur is None:
+        if split_node is None:
             #TIDY IndexError?
             raise IndexError(f"Could not find Node {id}")
             return
 
         # Check if node is a leaf node
-        if not ( cur.child_a is None and cur.child_b is None ):
+        if not ( split_node.child_a is None and split_node.child_b is None ):
             #TODO maybe this implicitly checks whether the Node exists?
-            raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {cur}")
+            raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {split_node}")
 
         # Set default direction and check for valid direction
         if direction is None:
@@ -88,40 +88,48 @@ class Tree():
 
         #TODO this was a check splitting across the narrow dimension
         if even:
-            edge_a = cur.get_rnd_edge()
-            edge_b = cur.get_opp_edge(edge_a)
+            edge_a = split_node.get_rnd_edge()
+            edge_b = split_node.get_opp_edge(edge_a)
         else:
             #TODO HELP I think responsibilities are split funny now
-            edge_a, edge_b = sample(self.registry.get_edges(cur), 2)
+            edge_a, edge_b = sample(self.registry.get_edges(split_node), 2)
 
-        print(f"  Splitting on Edges {edge_a} & {edge_b}")
+        #print(f"  Splitting on Edges {edge_a} & {edge_b}")
 
         _, vertex_a, _ = split_edge(edge_a, location, self.registry)
         _, vertex_b, _ = split_edge(edge_b, location, self.registry)
 
-        print(f"  Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
-
-        #TODO Find which of the ancestor Node's Vertices each Node inherits
-
+        #print(f"  Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
 
         self.max_id += 1
-        new_node_a = Node(self.max_id, cur, self.registry)
+        new_node_a = Node(self.max_id, split_node, self.registry, vertices=[vertex_a, vertex_b])
         self.max_id += 1
-        new_node_b = Node(self.max_id, cur, self.registry)
-        print(f"  Created two new nodes: {new_node_a} & {new_node_b}")
+        new_node_b = Node(self.max_id, split_node, self.registry, vertices=[vertex_a, vertex_b])
+        #print(f"  Created two new nodes: {new_node_a} & {new_node_b}")
 
-        cur.child_a = new_node_a
-        cur.child_b = new_node_b
-        print(f"  Updated child pointers on {cur}")
+        split_node.child_a = new_node_a
+        split_node.child_b = new_node_b
+        #print(f"  Updated child pointers on {split_node}")
 
         new_edge = Edge(vertex_a, vertex_b, new_node_a, new_node_b)
-        print(f"  Created a new edge: {new_edge}")
+        #print(f"  Created a new edge: {new_edge}")
 
         self.registry.append(new_edge)
 
-        update_edges_from_new_edge(new_edge, cur)
+        update_edges_from_new_edge(new_edge, split_node)
 
-        def update_
+        # Define visitor to find Vertices for the new Nodes
+        def inherit_vertices(thing):
+            if isinstance(thing, Vertex):
+                if Vertex in split_node.vertices:
+                    vertex_inheritor.vertices.append(Vertex)
+
+        # Give the new Nodes the rest of their Vertices
+        vertex_inheritor = new_node_a
+        follow_edges(vertex_a, vertex_b, vertex_inheritor, inherit_vertices)
+
+        vertex_inheritor = new_node_b
+        follow_edges(vertex_a, vertex_b, vertex_inheritor, inherit_vertices)
 
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer

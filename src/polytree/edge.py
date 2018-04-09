@@ -12,6 +12,7 @@ class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
 
     _DEFAULT_SHOW_LABELS = True
+    _DEFAULT_LABEL_COLOR = "black"
 
     def __init__(self, tail, head, left_node, right_node):
         #Needed if we use the connect methods below?
@@ -53,13 +54,13 @@ class Edge():
         to head and return two new edges '''
 
         new_vertex = self.get_new_vertex(percentage)
-        print(f"      Created new vertex: {new_vertex}")
+        #print(f"      Created new vertex: {new_vertex}")
 
         tail_segment = Edge(self._tail, new_vertex, self._left_node, self._right_node)
         head_segment = Edge(new_vertex, self._head, self._left_node, self._right_node)
-        print(f"      Created new segments: {tail_segment} & {head_segment}")
+        #print(f"      Created new segments: {tail_segment} & {head_segment}")
 
-        print(f"      Updated Vertex: {new_vertex}")
+        #print(f"      Updated Vertex: {new_vertex}")
 
         return tail_segment, new_vertex, head_segment
 
@@ -128,6 +129,8 @@ class Edge():
         #TODO do we need to handle label colors?
 
         labels = Edge._DEFAULT_SHOW_LABELS if labels is None else labels
+        #FEATURE This is here to support label colors in the future
+        label_color = Edge._DEFAULT_LABEL_COLOR if color is None else color
 
         #print(f"Edge: adding {self} in {color}")
         line = Line(self._tail, self._head)
@@ -142,11 +145,11 @@ class Edge():
             if self._right_node:
                 #print(f"Labeling with {color} {self._right_node.id}")
                 r_label = line.label_coords("right")
-                draw.text(r_label.as_tuple(), str(self._right_node.id), color)
+                draw.text(r_label.as_tuple(), str(self._right_node.id), label_color)
             if self._left_node:
                 #print(f"Labeling with {color} {self._left_node.id}")
                 l_label = line.label_coords("left")
-                draw.text(l_label.as_tuple(), str(self._left_node.id), color)
+                draw.text(l_label.as_tuple(), str(self._left_node.id), label_color)
 
     def show(self, labels=None, color=None, width=None):
         ''' Display the Edge '''

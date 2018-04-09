@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
-#from polytree.registry import EdgeRegistry
-#from polytree.node import Node
-#from polytree.vertex import Vertex
-#from polytree.xy import XY
-#from polytree.edge import Edge
-#from PIL import Image, ImageDraw
-#from random import sample
+from polytree.edge import Edge
 
 #TODO catchy name!
 def update_edges_from_new_edge(new_edge, old_node):
+    #HELP This has no concept of EdgeRegistry, which is spooky but
+    # understandable
 
     start_vertex = new_edge._head
     stop_vertex = new_edge._tail
@@ -18,58 +14,53 @@ def update_edges_from_new_edge(new_edge, old_node):
     relabel_edges(start_vertex, stop_vertex, "left", old_node, new_edge._left_node)
 
 def relabel_edges(start_vertex, stop_vertex, side, old_node, new_node):
+    ''' Starting at start_vertex, reassign all the Edges which have old_node
+    to their (relative) right to new_node, until stop_vertex is reached '''
 
-    cur_vertex = start_vertex
+    # The purpose of this function is to relabel half of all the Edges of
+    # a Node which has just been split. E.g. Node A is split into B and C,
+    # by new Edge M, with B on its left side and C on its right. Relabel
+    # all Edges which have A on their (relative) left side from A to B, starting
+    # at the head of M and stopping at M's tail. Then relabel from A to C
+    # on (relative) right.
 
-    while True:
-        cur_edge = track_next_edge(cur_vertex, side, old_node)
+    def relabel_edge(thing):
+        if isinstance(thing, Edge):
+            thing.replace(old_node, new_node)
 
-        cur_edge.replace(old_node, new_node)
-
-        cur_vertex = cur_edge.other_vertex(cur_vertex)
-
-        if cur_vertex is stop_vertex:
-            break
+    follow_edges(start_vertex, stop_vertex, old_node, relabel_edge, side=side)
 
 def track_next_edge(vertex, side, node):
+    ''' Return the Edge on a Vertex which has Node on
+    its (relative) side '''
+
     #print(f"Entering track_next_edge with Vertex {vertex.as_tuple()} Side {side} Node {node.id}")
 
     assert side in ("left", "right"), f"Side is {side}"
 
-    #DEBUG this counter is for debugging only - should be removed
-    found = 0
-
-    next_edge = None
-
     for edge in vertex.edges:
         #print(f"Looking at {edge._rel_repr(vertex)}")
-        if edge.borders_node(node):
-            #print(f"Found edge with {node}: {edge}")
-            #print(f"Edge has vertices: {id(edge._tail)} and {id(edge._head)}")
-            if node is edge.rel_side(side, vertex):
-                #print(f"Found edge with {node} on {side} side: {edge}")
-                next_edge = edge
-                #DEBUG only
-                #RELEASE there would be a break somewhere around here
-                found += 1
-
-    assert found <= 1, f"Found more than 1 edge with {node} on the {side} side on {vertex}: {found} found"
-    assert next_edge, f"Found no edges with {node} on the {side} side on {vertex}"
-
-    return next_edge
-
-def visit_polygon(starting_vertex, node, visitor):
-    # Establish an Edge side to follow (doesn't matter which one)
-    #print(f"Entering visit_polygon with Vertex {starting_vertex.as_tuple()} Node {node.id} and a visitor")
-    for edge in starting_vertex.edges:
-        if edge.borders_node(node):
-            handedness = edge.side_of_node(node)
+        if node is edge.rel_side(side, vertex):
+            #print(f"Found edge with {node} on {side} side: {edge}")
             break
+        else:
+            #HELP just for the assertion
+            edge = None
+
+    assert edge, f"Found no edges with {node} on the {side} side on {vertex}"
+
+    return edge
+
+def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
+    # Pick an arbitrary "handedness" if none is specified
+    if side is None:
+        side = "right"
 
     cur_vertex = starting_vertex
+    visitor(cur_vertex)
 
     while True:
-        cur_edge = track_next_edge(cur_vertex, handedness, node)
+        cur_edge = track_next_edge(cur_vertex, side, node)
 
         #HELP visitor needs to be able to tell us to break, etc.
         #print(f"Calling visitor on {cur_edge}")
@@ -80,8 +71,7 @@ def visit_polygon(starting_vertex, node, visitor):
         visitor(cur_vertex)
         #print(f"Calling visitor on {cur_vertex}")
 
-        if cur_vertex is starting_vertex:
-            # We've circumscribed the polygon
+        if cur_vertex is ending_vertex:
             break
 
 def split_edge(edge, percentage, registry):

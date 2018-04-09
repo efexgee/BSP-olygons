@@ -8,6 +8,7 @@ from polytree.edge import Edge
 from polytree.tree import Tree
 from polytree.xy import XY
 from random import choice
+from polytree.functions import update_edges_from_new_edge
 
 img = Image.new("RGBA", (300, 300), "white")
 draw = ImageDraw.Draw(img)
@@ -64,11 +65,11 @@ reg.add_to_draw(draw)
 #tri_L.centroid().add_to_draw(draw)
 
 # registry for split testing
-splitsies = EdgeRegistry()
+test_split = EdgeRegistry()
 
-node_m = Node("M", None, splitsies)
-node_n = Node("N", None, splitsies)
-node_o = Node("O", None, splitsies)
+node_m = Node("M", None, test_split)
+node_n = Node("N", None, test_split)
+node_o = Node("O", None, test_split)
 
 v_a = Vertex(50,50)
 v_b = Vertex(150,75)
@@ -81,10 +82,12 @@ e_bc = Edge(v_b, v_c, None, node_m)
 e_cd = Edge(v_c, v_d, None, node_m)
 e_da = Edge(v_d, v_a, None, node_m)
 
-splitsies.extend((e_ab, e_bc, e_cd, e_da))
+test_split.extend((e_ab, e_bc, e_cd, e_da))
 
 e_db = Edge(v_d, v_b, node_o, node_n)
-splitsies.extend((e_db,))
+test_split.extend((e_db,))
+new_edge = e_db
+old_node = node_m
 
 baum = Tree(XY(800))
 #baum.split(0)

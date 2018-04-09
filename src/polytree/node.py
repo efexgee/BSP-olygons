@@ -5,10 +5,9 @@ from polytree.edge import Edge
 from random import choice
 from polytree.xy import XY
 from math import degrees, acos
-from polytree.functions import visit_polygon
+from polytree.functions import follow_edges
 from polytree.vertex import Vertex
 #from statistics import mean
-#from collections import UserList
 
 class Side(Edge):
     ''' One side of a polygon '''
@@ -45,12 +44,16 @@ class Node():
         return self.registry.get_edges(self)
 
     def get_sides(self):
+        # Pick an arbitrary Vertex on the Node
         starting_vertex = self.vertices[0]
 
+        # We'll be returning this list of Sides
         sides = []
 
-        side_tail = starting_vertex
+        # The Edges compromising the current Side we're building
         side_edges = []
+
+        side_tail = None
 
         #HELP better name than thing?
         def build_sides(thing):
@@ -61,10 +64,12 @@ class Node():
                 #print(f"Thing is a Vertex")
                 if thing in self.vertices:
                     #print(f"Thing is a Vertex of Node")
-                    sides.append(Side(side_tail, thing, side_edges))
+                    if side_tail:
+                        # We have completed a Side
+                        sides.append(Side(side_tail, thing, side_edges))
+                        #HELP dealing with scope
+                        side_edges.clear()
                     side_tail = thing
-                    #HELP dealing with scope
-                    side_edges.clear()
             elif isinstance(thing, Edge):
                 #print(f"Thing is an Edge")
                 side_edges.append(thing)
@@ -72,7 +77,7 @@ class Node():
                 assert False, f"{thing} is of type {type(thing)}"
 
 
-        visit_polygon(starting_vertex, self, build_sides)
+        follow_edges(starting_vertex, starting_vertex, self, build_sides)
 
         return sides
 
