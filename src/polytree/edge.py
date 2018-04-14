@@ -162,6 +162,17 @@ class Edge():
 
         img.show()
 
+    #HELP is this OK imp of __eq__?
+    #HELP this only exists so I can compare Sides : \
+    def __eq__(self, other):
+        # Using == on the vertices because we want to match coordinates
+        if self._tail == other._tail and self._head == other._head:
+            # Using "is" on the Nodes because... that's right
+            if self._left_node is other._left_node and self._right_node is other._right_node:
+                return True
+
+        return False
+
     def _rel_repr(self, vertex):
         if vertex is self._tail:
             near = self._tail

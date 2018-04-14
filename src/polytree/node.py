@@ -4,8 +4,7 @@ from termcolor import colored
 from polytree.edge import Edge
 from random import choice
 from polytree.xy import XY
-from math import degrees, acos
-from polytree.functions import follow_edges
+from polytree.functions import follow_edges, most_opposite_edge
 from polytree.vertex import Vertex
 #from statistics import mean
 
@@ -16,10 +15,13 @@ class Side(Edge):
         # We're not using the side nodes so they're None
         super().__init__(tail, head, None, None)
 
-        self.edges = edges
+        #HELP this makes them all have the same edges list :(
+        #self.edges = edges
+
+        self.edges = list(edges)
 
     def __repr__(self):
-        return f" Tail: {colored(self._tail.as_tuple(),'cyan')} Head: {colored(self._head.as_tuple(),'cyan')}\nEdges: {super().__repr__()}"
+        return f"{colored(self._tail.as_tuple(),'cyan')} -> {colored(self._head.as_tuple(),'cyan')}: {self.edges}"
 
 class Node():
     ''' node for a binary tree of Rectangles '''
@@ -60,6 +62,7 @@ class Node():
             # Visitor to send around the polygon
             #HELP scope dealing with
             nonlocal side_tail
+            #nonlocal sides
             if isinstance(thing, Vertex):
                 #print(f"Thing is a Vertex")
                 if thing in self.vertices:
@@ -73,9 +76,9 @@ class Node():
             elif isinstance(thing, Edge):
                 #print(f"Thing is an Edge")
                 side_edges.append(thing)
+                pass
             else:
                 assert False, f"{thing} is of type {type(thing)}"
-
 
         follow_edges(starting_vertex, starting_vertex, self, build_sides)
 
@@ -96,48 +99,30 @@ class Node():
         return choice(edges)
 
     def get_opp_edge(self, edge):
-        # The "intuitively opposing" edge doesn't always
-        # make for the most right angle
+        edges = self.get_edges()
 
-        def angle_between(edge_a, edge_b):
-            #print(f"Getting angle between edges {edge_a} and {edge_b}")
-            vector_a = XY(edge_a._head) - XY(edge_a._tail)
-            vector_b = XY(edge_b._head) - XY(edge_b._tail)
-            #print(f"Getting angle between vectors {vector_a} (mag={vector_a.magnitude()}) and {vector_b} (mag={vector_b.magnitude()})")
-            #print(f"Dot product of {vector_a} and {vector_b} is {vector_a.dot_product(vector_b)}")
+        edges.remove(edge)
 
-            dp = vector_a.dot_product(vector_b)
-            mags = vector_a.magnitude() * vector_b.magnitude()
-            bloop = dp / mags
-            rads = acos(bloop)
-            angle = degrees(rads)
-            #angle = degrees(acos(vector_a.dot_product(vector_b)/vector_a.magnitude() * vector_b.magnitude()))
-            return angle
+        return most_opposite_edge(edge, edges)
 
+    def get_rnd_side(self, exclude=None):
+        #TODO do I need exclusions anymore?
+        sides = self.get_sides()
 
-        edge_midpoint = edge.get_new_vertex(50)
+        if exclude:
+            for exclusion in exclude:
+                sides.remove(exclusion)
 
-        #print(f"Matching {edge} with midpoint {edge_midpoint}")
+        return choice(sides)
 
-        best_angle = 0
-        best_edge = None
+    def get_opp_side(self, side):
+        sides = self.get_sides()
+        print(f"Source Side: {side}")
 
-        for other_edge in self.get_edges():
-            # Skip the edge itself
-            if other_edge is edge:
-                #print(f"Skipping the edge to be matched: {other_edge}")
-                continue
+        sides.remove(side)
+        print(f"Other Sides: {sides}")
 
-            other_midpoint = other_edge.get_new_vertex(50)
-            #print(f"Considering {edge} with midpoint {edge_midpoint._repr_coords()}")
-
-            angle = angle_between(edge, Edge(edge_midpoint, other_midpoint, None, None))
-
-            if abs(90 - angle) < abs(90 - best_angle):
-                best_angle = angle
-                best_edge = other_edge
-
-        return best_edge
+        return most_opposite_edge(side, sides)
 
     def centroid(self):
         ''' Return the centroid of a Node '''

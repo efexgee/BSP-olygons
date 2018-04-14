@@ -1,6 +1,52 @@
 #!/usr/bin/env python
 
 from polytree.edge import Edge
+from polytree.xy import XY
+from math import acos, degrees
+
+def angle_between_edges(edge_a, edge_b):
+    vector_a = XY(edge_a._head) - XY(edge_a._tail)
+    vector_b = XY(edge_b._head) - XY(edge_b._tail)
+
+    dot_product = vector_a.dot_product(vector_b)
+    magnitudes = vector_a.magnitude() * vector_b.magnitude()
+
+    #HELP or via exception?
+    if magnitudes == 0:
+        #TODO I think this is right
+        return 90
+
+    rads = acos(dot_product / magnitudes)
+    angle = degrees(rads)
+
+    return angle
+
+def most_opposite_edge(edge, edges):
+    # The "intuitively opposing" Edge doesn't always
+    # make for the most right angle
+
+    print(f"    Finding opposite of {type(edge)} {edge}")
+
+    # 50% is hard-coded here because we compare midpoints (for now)
+    edge_midpoint = edge.get_new_vertex(50)
+
+    print(f"    Source Edge's midpoint: {edge_midpoint}")
+
+    best_angle = 0
+    best_edge = None
+
+    for other_edge in edges:
+        other_midpoint = other_edge.get_new_vertex(50)
+
+        angle = angle_between_edges(edge, Edge(edge_midpoint, other_midpoint, None, None))
+        print(f"     Considering {other_edge} at midpoint {other_midpoint.as_tuple()} makes angle {int(angle)}")
+
+        if abs(90 - angle) < abs(90 - best_angle):
+            best_angle = angle
+            best_edge = other_edge
+
+    print(f"     Best edge is {best_edge} with angle {int(best_angle)}")
+    return best_edge
 
 #TODO catchy name!
 def update_edges_from_new_edge(new_edge, old_node):
@@ -51,6 +97,9 @@ def track_next_edge(vertex, side, node):
 
     return edge
 
+def the_raven(thing):
+    print(f"Quoth the raven: {thing}")
+
 def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
     # Pick an arbitrary "handedness" if none is specified
     if side is None:
@@ -62,6 +111,8 @@ def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
     while True:
         cur_edge = track_next_edge(cur_vertex, side, node)
 
+        print(f"    Considering {cur_edge} and {cur_vertex}")
+
         #HELP visitor needs to be able to tell us to break, etc.
         #print(f"Calling visitor on {cur_edge}")
         visitor(cur_edge)
@@ -72,6 +123,7 @@ def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
         #print(f"Calling visitor on {cur_vertex}")
 
         if cur_vertex is ending_vertex:
+            print(f"    Reached stop vertex {ending_vertex}")
             break
 
 def split_edge(edge, percentage, registry):
