@@ -6,22 +6,9 @@ from random import choice
 from polytree.xy import XY
 from polytree.functions import follow_edges, most_opposite_edge
 from polytree.vertex import Vertex
+from polytree.line import Line
+from polytree.side import Side
 #from statistics import mean
-
-class Side(Edge):
-    ''' One side of a polygon '''
-
-    def __init__(self, tail, head, edges=None):
-        # We're not using the side nodes so they're None
-        super().__init__(tail, head, None, None)
-
-        #HELP this makes them all have the same edges list :(
-        #self.edges = edges
-
-        self.edges = list(edges)
-
-    def __repr__(self):
-        return f"{colored(self._tail.as_tuple(),'cyan')} -> {colored(self._head.as_tuple(),'cyan')}: {self.edges}"
 
 class Node():
     ''' node for a binary tree of Rectangles '''
@@ -99,6 +86,7 @@ class Node():
         return choice(edges)
 
     def get_opp_edge(self, edge):
+        #TODO Still used?
         edges = self.get_edges()
 
         edges.remove(edge)

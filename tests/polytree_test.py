@@ -101,7 +101,7 @@ def splits(tree, times, even=False):
 
         #target_node_id = oldest
         target_node_id = rnd_leaf
-        tree.split(target_node_id, even=True)
+        tree.split_node(target_node_id, even=True)
 
 def test_oppo(tree):
     node = tree.get(choice(list(baum.leaves())))

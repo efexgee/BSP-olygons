@@ -56,7 +56,7 @@ class Tree():
 
         return walk(self.root, id)
 
-    def split(self, id, direction=None, location=50, even=False):
+    def split_node(self, id, direction=None, percentage=50, even=True):
         ''' Split a Node into two Nodes, in direction, at percentage.
             Default direction is to split across the shorter
             dimension (random for squares), and at 50%. '''
@@ -87,7 +87,7 @@ class Tree():
         if not direction.startswith(("v", "h")):
             raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
-        print(f"== Selecting sides to split")
+        #print(f"== Selecting sides to split")
         #TODO this was a check splitting across the narrow dimension
         if even:
             side_a = split_node.get_rnd_side()
@@ -98,48 +98,68 @@ class Tree():
 
         print(f"== Splitting on Sides:\n     {side_a}\n     {side_b}")
 
-        #TODO temporary silliness
-        edge_a = choice(side_a.edges)
-        edge_b = choice(side_b.edges)
+        def split_side(side, percentage):
+            #HELP func def in the middle of some random place?
+            point = side.find_point(percentage)
 
-        _, vertex_a, _ = split_edge(edge_a, location, self.registry)
-        _, vertex_b, _ = split_edge(edge_b, location, self.registry)
+            print(f" Looking for {point}")
 
-        print(f"=== Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
+            #HELP is "in" cheaper enough than the "for" loop to justify this?
+            if point in side.vertices():
+                print(f" {point} is a vertex in {side}")
+                for vertex in side.vertices():
+                    if vertex == point:
+                        # Found our vertex
+                        print(f" {vertex} is at {point}")
+                        return vertex
+            else:
+                print(f" Looking for Edge containing {point}")
+                edge = side.edge_containing(point)
+                assert edge is not None, f"edge should be defined: {edge}"
+
+                print(f" {edge} contains {point}")
+
+                #HELP I don't like [1] when I want to say "the middle one"
+                return split_edge(edge, percentage, self.registry)[1]
+
+        #print(f"=== Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
+
+        vertex_a = split_side(side_a, percentage)
+        vertex_b = split_side(side_b, percentage)
 
         self.max_id += 1
         new_node_a = Node(self.max_id, split_node, self.registry, vertices=[vertex_a, vertex_b])
         self.max_id += 1
         new_node_b = Node(self.max_id, split_node, self.registry, vertices=[vertex_a, vertex_b])
-        print(f"=== Created two new nodes:\n      {new_node_a}\n      {new_node_b}")
+        #print(f"=== Created two new nodes:\n      {new_node_a}\n      {new_node_b}")
 
         split_node.child_a = new_node_a
         split_node.child_b = new_node_b
-        print(f"=== Updated child pointers on Node {split_node.id}")
+        #print(f"=== Updated child pointers on Node {split_node.id}")
 
         new_edge = Edge(vertex_a, vertex_b, new_node_a, new_node_b)
-        print(f"=== Created the splitting edge: {new_edge}")
+        #print(f"=== Created the splitting edge: {new_edge}")
 
         self.registry.append(new_edge)
 
         update_edges_from_new_edge(new_edge, split_node)
-        print(f"=== Relabeled edges for the two new nodes:\n      {new_node_a}\n      {new_node_b}")
+        #print(f"=== Relabeled edges for the two new nodes:\n      {new_node_a}\n      {new_node_b}")
 
         # Define visitor to find Vertices for the new Nodes
         def inherit_vertices(thing):
             #print(f"Visiting {thing}")
             if isinstance(thing, Vertex):
-                print(f"    Visiting Vertex {thing}")
+                #print(f"    Visiting Vertex {thing}")
                 if thing in split_node.vertices:
-                    print(f"    Adding Vertex {thing} to vertices")
+                    #print(f"    Adding Vertex {thing} to vertices")
                     vertex_inheritor.vertices.append(thing)
 
         # Give the new Nodes the rest of their Vertices
-        print(f"=== Getting vertices for new node A")
+        #print(f"=== Getting vertices for new node A")
         vertex_inheritor = new_node_a
         follow_edges(vertex_a, vertex_b, vertex_inheritor, inherit_vertices)
 
-        print(f"=== Getting vertices for new node B")
+        #print(f"=== Getting vertices for new node B")
         vertex_inheritor = new_node_b
         follow_edges(vertex_b, vertex_a, vertex_inheritor, inherit_vertices)
         print(f"=== Updated vertices on nodes:\n      {new_node_a}\n      {new_node_b}")

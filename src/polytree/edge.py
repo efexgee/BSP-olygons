@@ -39,21 +39,27 @@ class Edge():
         else:
             assert False, f"{node} is not on {self}"
 
-    def get_new_vertex(self, percentage):
+    def locate_point(self, percentage):
         #TODO this needs some refinement to make sure the
         # point is actually on the line, not right next to it
         #TODO should this support relative to caller?
 
-        new_point = Line(self._tail, self._head).find_point(percentage)
-
-        return Vertex(new_point)
+        return Line(self._tail, self._head).find_point(percentage)
 
     def split(self, percentage):
         #TODO should this support relative to caller?
         ''' Insert a new vertex percentage of the way from tail
         to head and return two new edges '''
 
-        new_vertex = self.get_new_vertex(percentage)
+        coords = self.locate_point(percentage)
+        #print(f"      Created new vertex: {new_vertex}")
+
+        return self.insert_vertex(coords)
+
+    def insert_vertex(self, coords):
+        ''' Insert a new vertex, splitting the Edge in two '''
+
+        new_vertex = Vertex(coords)
         #print(f"      Created new vertex: {new_vertex}")
 
         tail_segment = Edge(self._tail, new_vertex, self._left_node, self._right_node)

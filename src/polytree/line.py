@@ -3,6 +3,7 @@
 from PIL import Image, ImageDraw
 from polytree.xy import XY
 from polytree.ext_label import label_loc_xy
+from math import acos, degrees
 
 class Line():
 
@@ -13,8 +14,8 @@ class Line():
     _DEFAULT_LINE_WIDTH = 2
 
     def __init__(self, tail, head):
-        self._tail = tail
-        self._head = head
+        self._tail = XY(tail)
+        self._head = XY(head)
 
     def find_point(self, percentage):
         #TODO this needs some refinement to make sure the
@@ -51,6 +52,23 @@ class Line():
     def end_points(self):
         #FEATURE use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
+
+    def angle_between(self, line):
+        vector_a = self._head - self._tail
+        vector_b = line._head - line._tail
+
+        dot_product = vector_a.dot_product(vector_b)
+        magnitudes = vector_a.magnitude() * vector_b.magnitude()
+
+        #HELP or via exception?
+        if magnitudes == 0:
+            #TODO I think this is right
+            return 90
+
+        rads = acos(dot_product / magnitudes)
+        angle = degrees(rads)
+
+        return angle
 
     def add_to_draw(self, draw, color=None, width=None):
 

@@ -2,24 +2,7 @@
 
 from polytree.edge import Edge
 from polytree.xy import XY
-from math import acos, degrees
-
-def angle_between_edges(edge_a, edge_b):
-    vector_a = XY(edge_a._head) - XY(edge_a._tail)
-    vector_b = XY(edge_b._head) - XY(edge_b._tail)
-
-    dot_product = vector_a.dot_product(vector_b)
-    magnitudes = vector_a.magnitude() * vector_b.magnitude()
-
-    #HELP or via exception?
-    if magnitudes == 0:
-        #TODO I think this is right
-        return 90
-
-    rads = acos(dot_product / magnitudes)
-    angle = degrees(rads)
-
-    return angle
+from polytree.line import Line
 
 def most_opposite_edge(edge, edges):
     # The "intuitively opposing" Edge doesn't always
@@ -28,7 +11,7 @@ def most_opposite_edge(edge, edges):
     print(f"    Finding opposite of {type(edge)} {edge}")
 
     # 50% is hard-coded here because we compare midpoints (for now)
-    edge_midpoint = edge.get_new_vertex(50)
+    edge_midpoint = edge.locate_point(50)
 
     print(f"    Source Edge's midpoint: {edge_midpoint}")
 
@@ -36,9 +19,11 @@ def most_opposite_edge(edge, edges):
     best_edge = None
 
     for other_edge in edges:
-        other_midpoint = other_edge.get_new_vertex(50)
+        other_midpoint = other_edge.locate_point(50)
 
-        angle = angle_between_edges(edge, Edge(edge_midpoint, other_midpoint, None, None))
+        #HELP how would sanely make Edge coercable to Line?
+        #HELP what is the diff between "cast" and "coerce"?
+        angle = Line(edge._tail, edge._head).angle_between(Line(edge_midpoint, other_midpoint))
         print(f"     Considering {other_edge} at midpoint {other_midpoint.as_tuple()} makes angle {int(angle)}")
 
         if abs(90 - angle) < abs(90 - best_angle):
