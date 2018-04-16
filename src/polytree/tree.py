@@ -76,7 +76,7 @@ class Tree():
             #TODO maybe this implicitly checks whether the Node exists?
             raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {split_node}")
 
-        print(f"== Determining split direction")
+        #print(f"== Determining split direction")
         # Set default direction and check for valid direction
         if direction is None:
             # If no direction is specified, split across the short dimension or
@@ -96,28 +96,28 @@ class Tree():
             #TODO HELP I think responsibilities are split funny now
             side_a, side_b = sample(split_node.get_sides(), 2)
 
-        print(f"== Splitting on Sides:\n     {side_a}\n     {side_b}")
+        #print(f"== Splitting on Sides:\n     {side_a}\n     {side_b}")
 
         def split_side(side, percentage):
             #HELP func def in the middle of some random place?
             point = side.find_point(percentage)
 
-            print(f" Looking for {point}")
+            #print(f" Looking for {point}")
 
             #HELP is "in" cheaper enough than the "for" loop to justify this?
             if point in side.vertices():
-                print(f" {point} is a vertex in {side}")
+                #print(f" {point} is a vertex in {side}")
                 for vertex in side.vertices():
                     if vertex == point:
                         # Found our vertex
-                        print(f" {vertex} is at {point}")
+                        #print(f" {vertex} is at {point}")
                         return vertex
             else:
-                print(f" Looking for Edge containing {point}")
+                #print(f" Looking for Edge containing {point}")
                 edge = side.edge_containing(point)
                 assert edge is not None, f"edge should be defined: {edge}"
 
-                print(f" {edge} contains {point}")
+                #print(f" {edge} contains {point}")
 
                 #HELP I don't like [1] when I want to say "the middle one"
                 return split_edge(edge, percentage, self.registry)[1]
@@ -162,9 +162,9 @@ class Tree():
         #print(f"=== Getting vertices for new node B")
         vertex_inheritor = new_node_b
         follow_edges(vertex_b, vertex_a, vertex_inheritor, inherit_vertices)
-        print(f"=== Updated vertices on nodes:\n      {new_node_a}\n      {new_node_b}")
+        #print(f"=== Updated vertices on nodes:\n      {new_node_a}\n      {new_node_b}")
 
-        print(f"= Done splitting")
+        #print(f"= Done splitting")
 
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer

@@ -105,10 +105,10 @@ class Node():
 
     def get_opp_side(self, side):
         sides = self.get_sides()
-        print(f"Source Side: {side}")
+        #print(f"Source Side: {side}")
 
         sides.remove(side)
-        print(f"Other Sides: {sides}")
+        #print(f"Other Sides: {sides}")
 
         return most_opposite_edge(side, sides)
 

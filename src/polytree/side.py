@@ -17,17 +17,17 @@ class Side(Edge):
     def edge_containing(self, xy):
         # Check which Edge's bounding box contains the coords
 
-        print(f"  Looking for Edge containing {xy}")
+        #print(f"  Looking for Edge containing {xy}")
 
         #TODO bounding boxes share borders
         for edge in self.edges:
-            print(f"  Looking for {xy} on {edge}")
+            #print(f"  Looking for {xy} on {edge}")
             
             #HELP how to check for "between"?
             if min(edge._tail._x, edge._head.x) <= xy._x <= max(edge._tail._x, edge._head._x) and \
                 min(edge._tail._y, edge._head._y) <= xy._y <= max(edge._tail._y, edge._head._y):
                     # We found our Edge
-                    print(f"  {edge} contains {xy}")
+                    #print(f"  {edge} contains {xy}")
                     return edge
 
     def find_point(self, percentage):

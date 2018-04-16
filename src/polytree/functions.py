@@ -8,12 +8,12 @@ def most_opposite_edge(edge, edges):
     # The "intuitively opposing" Edge doesn't always
     # make for the most right angle
 
-    print(f"    Finding opposite of {type(edge)} {edge}")
+    #print(f"    Finding opposite of {type(edge)} {edge}")
 
     # 50% is hard-coded here because we compare midpoints (for now)
     edge_midpoint = edge.locate_point(50)
 
-    print(f"    Source Edge's midpoint: {edge_midpoint}")
+    #print(f"    Source Edge's midpoint: {edge_midpoint}")
 
     best_angle = 0
     best_edge = None
@@ -24,13 +24,13 @@ def most_opposite_edge(edge, edges):
         #HELP how would sanely make Edge coercable to Line?
         #HELP what is the diff between "cast" and "coerce"?
         angle = Line(edge._tail, edge._head).angle_between(Line(edge_midpoint, other_midpoint))
-        print(f"     Considering {other_edge} at midpoint {other_midpoint.as_tuple()} makes angle {int(angle)}")
+        #print(f"     Considering {other_edge} at midpoint {other_midpoint.as_tuple()} makes angle {int(angle)}")
 
         if abs(90 - angle) < abs(90 - best_angle):
             best_angle = angle
             best_edge = other_edge
 
-    print(f"     Best edge is {best_edge} with angle {int(best_angle)}")
+    #print(f"     Best edge is {best_edge} with angle {int(best_angle)}")
     return best_edge
 
 #TODO catchy name!
@@ -96,7 +96,7 @@ def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
     while True:
         cur_edge = track_next_edge(cur_vertex, side, node)
 
-        print(f"    Considering {cur_edge} and {cur_vertex}")
+        #print(f"    Considering {cur_edge} and {cur_vertex}")
 
         #HELP visitor needs to be able to tell us to break, etc.
         #print(f"Calling visitor on {cur_edge}")
@@ -108,12 +108,12 @@ def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
         #print(f"Calling visitor on {cur_vertex}")
 
         if cur_vertex is ending_vertex:
-            print(f"    Reached stop vertex {ending_vertex}")
+            #print(f"    Reached stop vertex {ending_vertex}")
             break
 
 def split_edge(edge, percentage, registry):
     edge_a, vertex, edge_b = edge.split(percentage)
-    print(f"    Split {edge} into {edge_a} & {edge_b} about {vertex.as_tuple()}")
+    #print(f"    Split {edge} into {edge_a} & {edge_b} about {vertex.as_tuple()}")
 
     edge.disconnect()
     registry.remove(edge)
