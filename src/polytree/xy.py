@@ -30,10 +30,8 @@ class XY():
         elif isinstance(x, int):
             self.x = x
 
-            if y is None:
-                self.y = x
-            else:
-                self.y = y
+            self.y = x if y is None else y
+
         elif isinstance(x, XY):
             self.x = x.x
             self.y = x.y
@@ -142,18 +140,63 @@ class XY():
     def __repr__(self):
         return f"({self.x: {XY._COORD_PADDING}},{self.y: {XY._COORD_PADDING}})"
 
-#TODO both diffs and coords are subs of XY
-# coord init setters enforce positive values
-# neg will throw exception
-# return on math methods depends on types:
-# coord + diff = coord, coord - coord = diff
+class Coord(XY):
+    ''' An XY coordinate (must be positive) '''
+    def __init__(self, x, y=None):
+        super().__init__(x, y)
 
-class XYCoord(XY):
-    def __sub__(self, coord):
-        ''' Subtract a XYCoord with a lower limit of 0 in the result ''' 
-        result = super().__sub__(coord)
+        #HELP hacky? I like it
+        if self.x < 0 or self.y < 0:
+            raise ValueError(f"Coords must be non-negative: x={x} y={y}")
 
-        x = max(0, result._x)
-        y = max(0, result._y)
+    #HELP wrap here, don't squeeze logic into XY, right?
+    def __sub__(self, value):
+        #HELP math once, coerce many, right? less noisy
+        result = super().__sub__(value)
 
-        return XY(x, y)
+        if isinstance(value, Coord):
+            # Coord - Coord = Offset
+            return Offset(result)
+        elif isinstance(value, Offset):
+            # Coord - Offset = Coord
+            return Coord(result)
+        else:
+            # Type is undefined for other combinations
+            return result
+
+    def __add__(self, value):
+        result = super().__add__(value)
+
+        if isinstance(value, Offset):
+            # Coord + Offset = Coord
+            return Coord(result)
+        else:
+            # Type is undefined for other combinations
+            return result
+
+class Offset(XY):
+    ''' The offset between two XY coordinates '''
+
+    def __sub__(self, value):
+       #HELP math once, coerce many, right? less noisy
+       result = super().__sub__(value)
+
+       if isinstance(value, Offset):
+           # Offset - Offset = Offset
+           return Coord(result)
+       else:
+           # Type is undefined for other combinations
+           return result
+
+    def __add__(self, value):
+       result = super().__add__(value)
+
+       if isinstance(value, Offset):
+           # Offset + Offset = Offset
+           return Offset(result)
+       elif isinstance(value, Coord):
+           # Offset + Coord = Coord
+           return Coord(result)
+       else:
+           # Type is undefined for other combinations
+            return result

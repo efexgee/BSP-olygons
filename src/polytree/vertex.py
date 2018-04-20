@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from polytree.xy import XYCoord
+from polytree.xy import Coord
 from termcolor import colored
 
-class Vertex(XYCoord):
+class Vertex(Coord):
     def __init__(self, *args):
         super().__init__(*args)
 
