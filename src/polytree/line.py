@@ -60,13 +60,12 @@ class Line():
         dot_product = vector_a.dot_product(vector_b)
         magnitudes = vector_a.magnitude() * vector_b.magnitude()
 
-        #HELP or via exception?
-        if magnitudes == 0:
-            #TODO I think this is right
-            return 90
-
-        rads = acos(dot_product / magnitudes)
-        angle = degrees(rads)
+        try:
+            rads = acos(dot_product / magnitudes)
+        except ZeroDivisionError:
+            angle = 90
+        else:
+            angle = degrees(rads)
 
         return angle
 

@@ -92,7 +92,7 @@ old_node = node_m
 baum = Tree(XY(800))
 #baum.split(0)
 
-def splits(tree, times, even=False):
+def splits(tree, times, even=None):
     for _ in range(times):
         #tree.split(choice(list(tree.leaves())))
         leaves = list(tree.leaves())
@@ -101,7 +101,7 @@ def splits(tree, times, even=False):
 
         #target_node_id = oldest
         target_node_id = rnd_leaf
-        tree.split_node(target_node_id, even=True)
+        tree.split_node(target_node_id, even)
 
 def test_oppo(tree):
     node = tree.get(choice(list(baum.leaves())))

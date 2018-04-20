@@ -26,7 +26,6 @@ class Edge():
         self._left_node = left_node      # should only be changed via replace()
         self._right_node = right_node    # should only be changed via replace()
 
-    #HELP call it borders_node(node) or borders(node)
     def borders_node(self, node):
         ''' Check whether Edge is part of a Node '''
         return node in (self._left_node, self._right_node)
@@ -52,7 +51,6 @@ class Edge():
         to head and return two new edges '''
 
         coords = self.locate_point(percentage)
-        #print(f"      Created new vertex: {new_vertex}")
 
         return self.insert_vertex(coords)
 
@@ -168,16 +166,12 @@ class Edge():
 
         img.show()
 
-    #HELP is this OK imp of __eq__?
     #HELP this only exists so I can compare Sides : \
+    #TODO are they not really the same vertices?
     def __eq__(self, other):
         # Using == on the vertices because we want to match coordinates
-        if self._tail == other._tail and self._head == other._head:
-            # Using "is" on the Nodes because... that's right
-            if self._left_node is other._left_node and self._right_node is other._right_node:
-                return True
-
-        return False
+        return self._tail == other._tail and self._head == other._head and \
+            self._left_node is other._left_node and self._right_node is other._right_node
 
     def _rel_repr(self, vertex):
         if vertex is self._tail:

@@ -56,25 +56,53 @@ class Tree():
 
         return walk(self.root, id)
 
-    def split_node(self, id, direction=None, percentage=50, even=True):
+    def _split_side(self, side, percentage):
+        ''' (Helper method for split_node())
+            Splits an Edge at specified location on the Side and
+            returns the new Vertex. If the location matches an
+            existing Vertex, just returns that instead '''
+        point = side.find_point(percentage)
+
+        #print(f" Looking for {point}")
+
+        for vertex in side.vertices():
+            if vertex == point:
+                # Found our vertex
+                #print(f" {vertex} is at {point}")
+                return vertex
+
+        #print(f" Looking for Edge containing {point}")
+        edge = side.edge_containing(point)
+        assert edge is not None, f"edge should be defined: {edge}"
+
+        #print(f" {edge} contains {point}")
+
+        _, vertex, _ = split_edge(edge, percentage, self.registry)
+        return vertex
+
+
+    def split_node(self, id, direction=None, percentage=50, even=None):
         ''' Split a Node into two Nodes, in direction, at percentage.
             Default direction is to split across the shorter
             dimension (random for squares), and at 50%. '''
-        split_node = self.get(id)
+
+        even = True
+
+        old_node = self.get(id)
 
         print(f"\n= Splitting Node {id} {direction}-wise (probably into Node {self.max_id + 1} & Node {self.max_id + 2})")
 
         # Check if node exist
         #TODO should this be handled by .get()?
-        if split_node is None:
+        if old_node is None:
             #TIDY IndexError?
             raise IndexError(f"Could not find Node {id}")
             return
 
         # Check if node is a leaf node
-        if not ( split_node.child_a is None and split_node.child_b is None ):
+        if not ( old_node.child_a is None and old_node.child_b is None ):
             #TODO maybe this implicitly checks whether the Node exists?
-            raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {split_node}")
+            raise ValueError(f"Can't split non-leaf nodes. Node {id} has children: {old_node}")
 
         #print(f"== Determining split direction")
         # Set default direction and check for valid direction
@@ -84,65 +112,41 @@ class Tree():
             direction = "very not implemented!"
             # split randomly if it's a square
 
-        if not direction.startswith(("v", "h")):
-            raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
+        #TODO why did I have to comment this out?
+        #if not direction.startswith(("v", "h")):
+            #raise ValueError(f"Direction has to start with 'v' or 'h' but is {direction}")
 
         #print(f"== Selecting sides to split")
-        #TODO this was a check splitting across the narrow dimension
+        #TODO even should split across the narrowest part
         if even:
-            side_a = split_node.get_rnd_side()
-            side_b = split_node.get_opp_side(side_a)
+            side_a = old_node.get_rnd_side()
+            side_b = old_node.get_opp_side(side_a)
         else:
-            #TODO HELP I think responsibilities are split funny now
-            side_a, side_b = sample(split_node.get_sides(), 2)
+            side_a, side_b = sample(old_node.get_sides(), 2)
 
         #print(f"== Splitting on Sides:\n     {side_a}\n     {side_b}")
 
-        def split_side(side, percentage):
-            #HELP func def in the middle of some random place?
-            point = side.find_point(percentage)
-
-            #print(f" Looking for {point}")
-
-            #HELP is "in" cheaper enough than the "for" loop to justify this?
-            if point in side.vertices():
-                #print(f" {point} is a vertex in {side}")
-                for vertex in side.vertices():
-                    if vertex == point:
-                        # Found our vertex
-                        #print(f" {vertex} is at {point}")
-                        return vertex
-            else:
-                #print(f" Looking for Edge containing {point}")
-                edge = side.edge_containing(point)
-                assert edge is not None, f"edge should be defined: {edge}"
-
-                #print(f" {edge} contains {point}")
-
-                #HELP I don't like [1] when I want to say "the middle one"
-                return split_edge(edge, percentage, self.registry)[1]
-
         #print(f"=== Created two new vertices: {vertex_a.as_tuple()} & {vertex_b.as_tuple()}")
 
-        vertex_a = split_side(side_a, percentage)
-        vertex_b = split_side(side_b, percentage)
+        vertex_a = self._split_side(side_a, percentage)
+        vertex_b = self._split_side(side_b, percentage)
 
         self.max_id += 1
-        new_node_a = Node(self.max_id, split_node, self.registry, vertices=[vertex_a, vertex_b])
+        new_node_a = Node(self.max_id, old_node, self.registry, vertices=[vertex_a, vertex_b])
         self.max_id += 1
-        new_node_b = Node(self.max_id, split_node, self.registry, vertices=[vertex_a, vertex_b])
+        new_node_b = Node(self.max_id, old_node, self.registry, vertices=[vertex_a, vertex_b])
         #print(f"=== Created two new nodes:\n      {new_node_a}\n      {new_node_b}")
 
-        split_node.child_a = new_node_a
-        split_node.child_b = new_node_b
-        #print(f"=== Updated child pointers on Node {split_node.id}")
+        old_node.child_a = new_node_a
+        old_node.child_b = new_node_b
+        #print(f"=== Updated child pointers on Node {old_node.id}")
 
         new_edge = Edge(vertex_a, vertex_b, new_node_a, new_node_b)
         #print(f"=== Created the splitting edge: {new_edge}")
 
         self.registry.append(new_edge)
 
-        update_edges_from_new_edge(new_edge, split_node)
+        update_edges_from_new_edge(new_edge, old_node)
         #print(f"=== Relabeled edges for the two new nodes:\n      {new_node_a}\n      {new_node_b}")
 
         # Define visitor to find Vertices for the new Nodes
@@ -150,7 +154,7 @@ class Tree():
             #print(f"Visiting {thing}")
             if isinstance(thing, Vertex):
                 #print(f"    Visiting Vertex {thing}")
-                if thing in split_node.vertices:
+                if thing in old_node.vertices:
                     #print(f"    Adding Vertex {thing} to vertices")
                     vertex_inheritor.vertices.append(thing)
 

@@ -44,28 +44,24 @@ class Node():
 
         side_tail = None
 
-        #HELP better name than thing?
-        def build_sides(thing):
+        def build_sides(item):
             # Visitor to send around the polygon
-            #HELP scope dealing with
             nonlocal side_tail
-            #nonlocal sides
-            if isinstance(thing, Vertex):
+
+            if isinstance(item, Vertex):
                 #print(f"Thing is a Vertex")
-                if thing in self.vertices:
+                if item in self.vertices:
                     #print(f"Thing is a Vertex of Node")
                     if side_tail:
                         # We have completed a Side
-                        sides.append(Side(side_tail, thing, side_edges))
-                        #HELP dealing with scope
+                        sides.append(Side(side_tail, item, side_edges))
                         side_edges.clear()
-                    side_tail = thing
-            elif isinstance(thing, Edge):
+                    side_tail = item
+            elif isinstance(item, Edge):
                 #print(f"Thing is an Edge")
-                side_edges.append(thing)
-                pass
+                side_edges.append(item)
             else:
-                assert False, f"{thing} is of type {type(thing)}"
+                raise TypeError(f"{item} is of type {type(item)}")
 
         follow_edges(starting_vertex, starting_vertex, self, build_sides)
 

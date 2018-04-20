@@ -4,6 +4,7 @@ from collections import UserList
 from polytree.node import Node
 from polytree.xy import XY
 from PIL import Image, ImageDraw
+from polytree.edge import Edge
 
 #TODO Registry shouldn't draw things. Shoud return coords or lines, etc.
 class EdgeRegistry(UserList):

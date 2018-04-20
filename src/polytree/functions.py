@@ -22,7 +22,6 @@ def most_opposite_edge(edge, edges):
         other_midpoint = other_edge.locate_point(50)
 
         #HELP how would sanely make Edge coercable to Line?
-        #HELP what is the diff between "cast" and "coerce"?
         angle = Line(edge._tail, edge._head).angle_between(Line(edge_midpoint, other_midpoint))
         #print(f"     Considering {other_edge} at midpoint {other_midpoint.as_tuple()} makes angle {int(angle)}")
 
@@ -35,9 +34,6 @@ def most_opposite_edge(edge, edges):
 
 #TODO catchy name!
 def update_edges_from_new_edge(new_edge, old_node):
-    #HELP This has no concept of EdgeRegistry, which is spooky but
-    # understandable
-
     start_vertex = new_edge._head
     stop_vertex = new_edge._tail
 
@@ -73,17 +69,12 @@ def track_next_edge(vertex, side, node):
         #print(f"Looking at {edge._rel_repr(vertex)}")
         if node is edge.rel_side(side, vertex):
             #print(f"Found edge with {node} on {side} side: {edge}")
-            break
-        else:
-            #HELP just for the assertion
-            edge = None
+            return edge
 
-    assert edge, f"Found no edges with {node} on the {side} side on {vertex}"
+    raise RuntimeError(f"Found no edges with {node} on the {side} side on {vertex}")
 
-    return edge
-
-def the_raven(thing):
-    print(f"Quoth the raven: {thing}")
+def the_raven(nevermore):
+    print(f"Quoth the raven: {nevermore}")
 
 def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
     # Pick an arbitrary "handedness" if none is specified
@@ -98,8 +89,8 @@ def follow_edges(starting_vertex, ending_vertex, node, visitor, side=None):
 
         #print(f"    Considering {cur_edge} and {cur_vertex}")
 
-        #HELP visitor needs to be able to tell us to break, etc.
         #print(f"Calling visitor on {cur_edge}")
+        #TODO if True, stop <- support that!
         visitor(cur_edge)
 
         cur_vertex = cur_edge.other_vertex(cur_vertex)

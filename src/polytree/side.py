@@ -11,8 +11,10 @@ class Side(Edge):
         # We're not using the side nodes so they're None
         super().__init__(tail, head, None, None)
 
-        #HELP having to do this is just a fact of life, right?
-        self.edges = list(edges)
+        if edges is None:
+            self.edges = []
+        else:
+            self.edges = list(edges)
 
     def edge_containing(self, xy):
         # Check which Edge's bounding box contains the coords
@@ -23,7 +25,7 @@ class Side(Edge):
         for edge in self.edges:
             #print(f"  Looking for {xy} on {edge}")
             
-            #HELP how to check for "between"?
+            #TODO implement this in XY?
             if min(edge._tail._x, edge._head.x) <= xy._x <= max(edge._tail._x, edge._head._x) and \
                 min(edge._tail._y, edge._head._y) <= xy._y <= max(edge._tail._y, edge._head._y):
                     # We found our Edge
