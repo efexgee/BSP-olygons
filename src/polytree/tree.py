@@ -5,7 +5,6 @@
 from polytree.registry import EdgeRegistry
 from polytree.node import Node
 from polytree.vertex import Vertex
-from polytree.xy import XY
 from polytree.edge import Edge
 from PIL import Image, ImageDraw
 from random import choice, sample
@@ -20,9 +19,9 @@ class Tree():
         self.root = Node(0, None, self.registry)
 
         v_ul = Vertex(0,0)
-        v_ur = Vertex(dimensions * XY(1,0))
+        v_ur = Vertex(dimensions.x, 0)
         v_br = Vertex(dimensions)
-        v_bl = Vertex(dimensions * XY(0,1))
+        v_bl = Vertex(0, dimensions.y)
 
         e_ulur = Edge(v_ul, v_ur, None, self.root)
         e_urbr = Edge(v_ur, v_br, None, self.root)

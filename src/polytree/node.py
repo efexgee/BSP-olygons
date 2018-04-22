@@ -3,12 +3,13 @@
 from termcolor import colored
 from polytree.edge import Edge
 from random import choice
-from polytree.xy import XY
+from polytree.xy import Coord
 from polytree.functions import follow_edges, most_opposite_edge
 from polytree.vertex import Vertex
 from polytree.line import Line
 from polytree.side import Side
-#from statistics import mean
+from polytree.globals import *
+from statistics import mean
 
 class Node():
     ''' node for a binary tree of Rectangles '''
@@ -116,12 +117,32 @@ class Node():
         x = []
         y = []
 
-        for vertex in self.vertices():
+        for vertex in self.vertices:
             #print(f"processing vertex {vertex}")
-            x.append(vertex._x)
-            y.append(vertex._y)
+            x.append(vertex.x)
+            y.append(vertex.y)
 
-        return XY(round(mean(x)), round(mean(y)))
+        return Coord(round(mean(x)), round(mean(y)))
+
+    def add_to_draw(self, draw, label=None, color=None, label_color=None, fill_color=None, width=None):
+
+        color = DEFAULT_LINE_COLOR if color is None else color
+        label = DEFAULT_SHOW_LABELS if label is None else label
+        # Label color defaults to the line color
+        label_color = color if label_color is None else label_color
+
+        #HELP not smooth, I know, but only this one time!
+        polygon_coords = [vertex.as_tuple() for vertex in self.vertices]
+        print(polygon_coords)
+
+        if fill_color is None:
+            draw.polygon(polygon_coords, outline=color)
+        else:
+            draw.polygon(polygon_coords, outline=color, fill=fill_color)
+
+        if label:
+            #print(f"Labeling {self}")
+            draw.text(self.centroid().as_tuple(), str(self.id), label_color)
 
     def __repr__(self):
         if self.parent is None:

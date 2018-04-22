@@ -1,20 +1,11 @@
 #!/usr/bin/env python
 
 from math import hypot
-#from PIL import Image, ImageDraw
+from polytree.globals import *
 
 class XY():
     ''' a pair of x and y values which represent either a
         coordinate or a lengths in the x and y axes '''
-
-    # Add additional space beyond the location of the coordinates
-    # when displaying XY on its own
-    _CANVAS_PADDING = 10
-    _DEFAULT_COLOR = "black"
-    _DEFAULT_BACKGROUND_COLOR = "white"
-
-    # Maximum number of digits in x or y (for printing)
-    _COORD_PADDING = 4
 
     #MAYBE try to implement iterator so XY can be used as a tuple
 
@@ -113,32 +104,33 @@ class XY():
         return XY(x, y)
 
     def magnitude(self):
-        return hypot(self._x, self._y)
+        return hypot(self.x, self.y)
 
     def dot_product(self, vector):
-        return (self._x * vector._x) + (self._y * vector._y)
+        return (self.x * vector.x) + (self.y * vector.y)
+
+    def is_in_box(self, a, b):
+        return min(a.x, b.x) <= self.x <= max(a.x, b.x) \
+           and min(a.y, b.y) <= self.y <= max(a.y, b.y)
 
     def as_tuple(self):
         return (self.x, self.y)
 
-    def add_to_draw(self, draw, color=_DEFAULT_COLOR):
+    #HELP should this only exist on Coord?
+    def add_to_draw(self, draw, color=None, size=None):
         ''' Add a point at XY to a PIL draw object '''
-        draw.point(self.as_tuple(), fill=color)
 
-    def show(self, color=_DEFAULT_COLOR):
-        ''' Show a point at XY '''
-        img_size = self + XY._CANVAS_PADDING
+        color = DEFAULT_POINT_COLOR if color is None else color
+        size = DEFAULT_POINT_SIZE if size is None else size
 
-        img = Image.new("RGBA", img_size.as_tuple(), XY._DEFAULT_BACKGROUND_COLOR)
-
-        draw = ImageDraw.Draw(img)
-
-        self.add_to_draw(draw)
-
-        img.show()
+        if size == 1:
+            draw.point(self.as_tuple(), fill=color)
+        else:
+            radius = size // 2
+            draw.ellipse((self - Offset(radius).as_tuple(), self + Offset(radius).as_tuple()), fill=color)
 
     def __repr__(self):
-        return f"({self.x: {XY._COORD_PADDING}},{self.y: {XY._COORD_PADDING}})"
+        return f"({self.x: {COORD_PADDING}},{self.y: {COORD_PADDING}})"
 
 class Coord(XY):
     ''' An XY coordinate (must be positive) '''

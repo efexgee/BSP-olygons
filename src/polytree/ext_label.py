@@ -1,9 +1,7 @@
 import logging
 
 import numpy as np
-from polytree.xy import XY
-
-#TODO can I uncomment the assertions now?
+from polytree.xy import Coord
 
 LOGGER = logging.getLogger("label.py")
 
@@ -22,7 +20,7 @@ def label_location(start, end, distance=0.1):
         [ya, yb],
         [ 1,  1]
         ])
-    #LOGGER.debug(f"initial a, b\n{columnar}")
+    LOGGER.debug(f"initial a, b\n{columnar}")
     # This transformation matrix is a translation matrix.
     x_to_zero = np.matrix([
         [1, 0, -xa],
@@ -31,11 +29,11 @@ def label_location(start, end, distance=0.1):
         ])
     at_zero = np.matmul(x_to_zero, columnar)
     LOGGER.debug(f"translated\n{at_zero}")
-    #LOGGER.debug(f"translated a {at_zero[:, 0].T}")
+    LOGGER.debug(f"translated a {at_zero[:, 0].T}")
     assert np.allclose(at_zero[:, 0].T, [[0, 0, 1]])
 
     bx, by = at_zero[0, 1], at_zero[1, 1]
-    #LOGGER.debug(f"bx {bx} by {by}")
+    LOGGER.debug(f"bx {bx} by {by}")
     r = np.sqrt(bx**2 + by**2)
     # This transformation matrix is a rotation matrix.
     rotate_to_x_axis = np.matrix([
@@ -64,7 +62,7 @@ def label_location(start, end, distance=0.1):
         np.linalg.inv(x_to_zero),
         rotated_back
         )
-    #LOGGER.debug(f"label_abs\n{label_absolute}")
+    LOGGER.debug(f"label_abs\n{label_absolute}")
 
     return label_absolute[0, 0], label_absolute[1, 0]
 
@@ -72,19 +70,19 @@ def label_loc_xy(start, end, distance=0.1):
     #TODO should be doing the single-default thing
     x, y = label_location(start, end, distance)
 
-    #TODO which method?
-    return XY(int(round(x)), round(float(y)))
+    #HELP which method?
+    return Coord(int(round(x)), round(float(y)))
 
 def test_label():
-    #assert np.allclose(label_location(XY(0, 0), XY(1, 0)), (0.5, 0.1))
-    #assert np.allclose(label_location(XY(0, 1), XY(1, 1)), (0.5, 1.1))
-    #assert np.allclose(label_location(XY(0, 1), XY(0, 2)), (-0.1, 1.5))
-    #assert np.allclose(label_location(XY(1, 1), XY(0, 1)), (0.5, 0.9))
-    #assert np.allclose(label_location(XY(0, 0), XY(2, 0)), (1, 0.1))
-    print(label_location(XY(23, 89), XY(45, 187), 10))
+    assert np.allclose(label_location(Coord(0, 0), Coord(1, 0)), (0.5, 0.1))
+    assert np.allclose(label_location(Coord(0, 1), Coord(1, 1)), (0.5, 1.1))
+    assert np.allclose(label_location(Coord(0, 1), Coord(0, 2)), (-0.1, 1.5))
+    assert np.allclose(label_location(Coord(1, 1), Coord(0, 1)), (0.5, 0.9))
+    assert np.allclose(label_location(Coord(0, 0), Coord(2, 0)), (1, 0.1))
+    print(label_location(Coord(23, 89), Coord(45, 187), 10))
     print()
-    print(label_location(XY(23, 89), XY(45, 187), -10))
-    #print(label_location(XY(45, 187),XY(23,89)))
+    print(label_location(Coord(23, 89), Coord(45, 187), -10))
+    print(label_location(Coord(45, 187),Coord(23,89)))
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

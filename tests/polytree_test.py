@@ -10,7 +10,7 @@ from polytree.xy import XY
 from random import choice
 from polytree.functions import update_edges_from_new_edge
 
-img = Image.new("RGBA", (300, 300), "white")
+img = Image.new("RGBA", (800, 800), "white")
 draw = ImageDraw.Draw(img)
 
 reg = EdgeRegistry()
@@ -29,10 +29,10 @@ e_poker = Edge(v_butt, v_top, None, tri_L)
 
 reg.extend((e_arrow, e_spear, e_poker))
 
-print(f"e_arrow: {e_arrow}")
-print(f"e_spear: {e_spear}")
-print(f"e_poker: {e_poker}")
-print()
+#print(f"e_arrow: {e_arrow}")
+#print(f"e_spear: {e_spear}")
+#print(f"e_poker: {e_poker}")
+#print()
 
 #print(f"v_butt: {v_butt}")
 #print(f"v_face: {v_face}")
@@ -50,12 +50,12 @@ e_seven = Edge(v_face, v_top_right, tri_O, tri_P)
 
 e_eight = Edge(v_top_right, v_bottom, None, tri_P)
 
-print(f"e_four: {e_four}")
-print(f"e_five: {e_five}")
-print(f"e_six: {e_six}")
-print(f"e_seven: {e_seven}")
-print(f"e_eight: {e_eight}")
-print()
+#print(f"e_four: {e_four}")
+#print(f"e_five: {e_five}")
+#print(f"e_six: {e_six}")
+#print(f"e_seven: {e_seven}")
+#print(f"e_eight: {e_eight}")
+#print()
 
 reg.extend((e_four, e_five, e_six, e_seven, e_eight))
 
@@ -92,6 +92,8 @@ old_node = node_m
 baum = Tree(XY(800))
 #baum.split(0)
 
+print("End of poly_tree.test setup") 
+
 def splits(tree, times, even=None):
     for _ in range(times):
         #tree.split(choice(list(tree.leaves())))
@@ -109,3 +111,5 @@ def test_oppo(tree):
     op_edge = node.get_opp_edge(edge)
 
     tree.show(labels=False,highlight=[edge,op_edge])
+
+print("End of poly_tree.test function declarations") 

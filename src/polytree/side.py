@@ -24,12 +24,8 @@ class Side(Edge):
         #TODO bounding boxes share borders
         for edge in self.edges:
             #print(f"  Looking for {xy} on {edge}")
-            
-            #TODO implement this in XY?
-            if min(edge._tail._x, edge._head.x) <= xy._x <= max(edge._tail._x, edge._head._x) and \
-                min(edge._tail._y, edge._head._y) <= xy._y <= max(edge._tail._y, edge._head._y):
+            if xy.is_in_box(edge._tail, edge._head):
                     # We found our Edge
-                    #print(f"  {edge} contains {xy}")
                     return edge
 
     def find_point(self, percentage):

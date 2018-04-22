@@ -3,28 +3,12 @@
 from collections import UserList
 from polytree.node import Node
 from polytree.xy import XY
-from PIL import Image, ImageDraw
+#from PIL import Image, ImageDraw
 from polytree.edge import Edge
+from polytree.globals import *
 
-#TODO Registry shouldn't draw things. Shoud return coords or lines, etc.
 class EdgeRegistry(UserList):
     ''' A list of Edges that can be addressed by their LineSegments '''
-
-    _DEFAULT_BACKGROUND_COLOR = "white"
-    _DEFAULT_HIGHLIGHT_COLOR = "pink"
-
-    def _get_edges_by_vertex(self, vertex):
-        ''' [Helper for .get_edges()] Return all Edges which contain the vertex '''
-        edges = []
-
-        for edge in self:
-            if edge.line.has_vertex(vertex):
-                edges.append(edge)
-
-        if edges:
-            return result
-        else:
-            raise KeyError(f"Vertex {vertex} is not in {self}")
 
     def _get_edges_by_node(self, node):
         ''' [Helper for .get_edges()] Return the Edges which contain the Node '''
@@ -41,50 +25,23 @@ class EdgeRegistry(UserList):
 
     def get_edges(self, value):
         ''' Return a list of Edges which contain a vertex or a Node '''
+        #RELEASE Supports look-ups by other types, but is not used right now
         if isinstance(value, Node):
             return self._get_edges_by_node(value)
-        elif isinstance(value, XY):
-            return self._get_edges_by_vertex(value)
         else:
             raise TypeError(f"Can't retrieve Edges based on type of {value}: {type(value)}")
 
-    def add_node_to_draw(self, node, draw, color=None, width=None):
-        ''' Add the polygon for a Node to a PIL draw object '''
-        args = {}
-        
-        if color:
-            args["color"] = color
-        if width:
-            args["width"] = width
-
-        self._get_edges_by_node(node).add_to_draw(draw, **args)
-
-    def show_node(self, node, color=None, width=None):
-        ''' Draw the polygon for a Node '''
-        args = {}
-        
-        if color:
-            args["color"] = color
-        if width:
-            args["width"] = width
-
-        img_size = self.canvas_size()
-
-        img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
-        draw = ImageDraw.Draw(img)
-        self.add_node_to_draw(node, draw, **args)
-
-        img.show()
-
-    def add_to_draw(self, draw, highlight=None, highlight_color=None, labels=None, color=None, width=None):
+    def add_to_draw(self, draw, highlight=None, highlight_color=None, labels=None, color=None, label_color=None, width=None):
         ''' Add all Edges to a PIL Draw object '''
 
-        highlight_color = EdgeRegistry._DEFAULT_HIGHLIGHT_COLOR if highlight_color is None else highlight_color
+        highlight_color = DEFAULT_HIGHLIGHT_COLOR if highlight_color is None else highlight_color
 
         highlighted_edges = []
 
         if highlight:
             for highlighted in highlight: 
+                #HELP how do I do this correctly?
+                #TODO should have tuples of highlighted and colors
                 if isinstance(highlighted, Edge):
                     highlighted_edges.append(highlighted)
                 elif isinstance(highlighted, Node):
@@ -101,18 +58,6 @@ class EdgeRegistry(UserList):
 
             edge.add_to_draw(draw, labels, color, width)
 
-    def show(self, highlight=None, highlight_color=None, labels=None, color=None, width=None):
-        ''' Display all the Edges '''
-
-        img_size = self.canvas_size()
-
-        img = Image.new("RGBA", img_size.as_tuple(), EdgeRegistry._DEFAULT_BACKGROUND_COLOR)
-        draw = ImageDraw.Draw(img)
-
-        self.add_to_draw(draw, highlight, highlight_color, labels, color, width)
-
-        img.show()
-
     def canvas_size(self):
         ''' Return the size an Image has to be to fit all the Edges '''
         max_x = 0
@@ -120,8 +65,8 @@ class EdgeRegistry(UserList):
 
         # This is a very inefficient traversal
         for edge in self:
-            max_x = max(max_x, edge._tail._x, edge._head._x)
-            max_y = max(max_y, edge._tail._y, edge._head._y)
+            max_x = max(max_x, edge._tail.x, edge._head.x)
+            max_y = max(max_y, edge._tail.y, edge._head.y)
 
         assert max_x * max_y > 0, f"Canvas size can't have a zero in it: ({max_x}, {max_y})"
             

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from polytree.edge import Edge
-from polytree.xy import XY
 from polytree.line import Line
 
 def most_opposite_edge(edge, edges):
@@ -32,7 +31,6 @@ def most_opposite_edge(edge, edges):
     #print(f"     Best edge is {best_edge} with angle {int(best_angle)}")
     return best_edge
 
-#TODO catchy name!
 def update_edges_from_new_edge(new_edge, old_node):
     start_vertex = new_edge._head
     stop_vertex = new_edge._tail

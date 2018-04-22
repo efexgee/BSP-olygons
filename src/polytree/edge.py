@@ -7,12 +7,10 @@ from polytree.line import Line
 from polytree.ext_label import label_loc_xy
 from polytree.vertex import Vertex
 #from PIL import Image, ImageDraw
+from polytree.globals import *
 
 class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
-
-    _DEFAULT_SHOW_LABELS = True
-    _DEFAULT_LABEL_COLOR = "black"
 
     def __init__(self, tail, head, left_node, right_node):
         #Needed if we use the connect methods below?
@@ -128,13 +126,12 @@ class Edge():
         self._head = vertex
         vertex.add_edge(self)
 
-    def add_to_draw(self, draw, labels=None, color=None, width=None):
+    def add_to_draw(self, draw, labels=None, color=None, label_color=None, width=None):
         ''' Add Edge to the specified PIL draw object '''
-        #TODO do we need to handle label colors?
 
-        labels = Edge._DEFAULT_SHOW_LABELS if labels is None else labels
-        #FEATURE This is here to support label colors in the future
-        label_color = Edge._DEFAULT_LABEL_COLOR if color is None else color
+        labels = DEFAULT_SHOW_LABELS if labels is None else labels
+        # Label color defaults to the line color
+        label_color = color if label_color is None else label_color
 
         #print(f"Edge: adding {self} in {color}")
         line = Line(self._tail, self._head)
@@ -143,8 +140,6 @@ class Edge():
 
         if labels:
             #print(f"Labeling {self}")
-            tail_coords = self._tail
-            head_coords = self._head
 
             if self._right_node:
                 #print(f"Labeling with {color} {self._right_node.id}")
@@ -154,17 +149,6 @@ class Edge():
                 #print(f"Labeling with {color} {self._left_node.id}")
                 l_label = line.label_coords("left")
                 draw.text(l_label.as_tuple(), str(self._left_node.id), label_color)
-
-    def show(self, labels=None, color=None, width=None):
-        ''' Display the Edge '''
-
-        img_size = XY(max(self._tail.x, self._head.x), max(self._tail.y, self._head.y)) + Edge._CANVAS_PADDING
-        img = Image.new("RGBA", img_size.as_tuple(), Edge._DEFAULT_BACKGROUND_COLOR)
-        draw = ImageDraw.Draw(img)
-
-        self.add_to_draw(draw, labels, color, width)
-
-        img.show()
 
     #HELP this only exists so I can compare Sides : \
     #TODO are they not really the same vertices?
