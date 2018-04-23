@@ -3,7 +3,6 @@
 from collections import UserList
 from polytree.node import Node
 from polytree.xy import XY
-#from PIL import Image, ImageDraw
 from polytree.edge import Edge
 from polytree.globals import *
 
@@ -21,7 +20,7 @@ class EdgeRegistry(UserList):
         if edges:
             return EdgeRegistry(edges)
         else:
-            raise KeyError(f"Node {node} is not in {self}")
+            raise KeyError(f"Node {node} is not in registry {self}")
 
     def get_edges(self, value):
         ''' Return a list of Edges which contain a vertex or a Node '''
@@ -50,13 +49,13 @@ class EdgeRegistry(UserList):
                     raise TypeError(f"Can't highlight Edges by type {type(highlighted)}: {highlighted}")
 
         for edge in self:
-            #print(f"EdgeRegistry: adding {edge} to {draw}")
             if edge in highlighted_edges:
-                color = highlight_color
+                edge_color = highlight_color
             else:
-                color = None
+                edge_color = color
 
-            edge.add_to_draw(draw, labels, color, width)
+            #print(f"EdgeRegistry: adding {edge} to {draw}: labels={labels} color={edge_color} width={width}")
+            edge.add_to_draw(draw, labels, edge_color, width)
 
     def canvas_size(self):
         ''' Return the size an Image has to be to fit all the Edges '''
@@ -73,9 +72,7 @@ class EdgeRegistry(UserList):
         return XY(max_x, max_y)
 
     def __repr__(self):
-        output = ""
-        for edge in self:
-            #TODO list comprehension with a join
-            output += f"{str(edge)} \n"
-
-        return output
+        if len(self) > 10:
+            return f"[Registry contains {len(self)} Edges]"
+        else:
+            return "\n".join(super().__repr__)

@@ -27,6 +27,10 @@ class Vertex(Coord):
         self.add_edge(edge)
         edge.connect_head(self)
 
+    #HELP how do we feel about this?
+    def coords(self):
+        return super().__repr__()
+
     def __repr__(self):
         #TODO \n in f-string works just fine
         #return "{}\n{}".format(super().__repr__(), '\n'.join(["\t{}".format(edge._rel_repr(self)) for edge in self.edges]))

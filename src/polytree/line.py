@@ -74,6 +74,7 @@ class Line():
         color = DEFAULT_LINE_COLOR if color is None else color
         width = DEFAULT_LINE_WIDTH if width is None else width
 
+        #print(f"Drawing Line: color={color} width={width}")
         draw.line((self._tail.as_tuple(), self._head.as_tuple()), fill=color, width=width)
 
     def __repr__(self):

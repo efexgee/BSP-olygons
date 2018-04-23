@@ -4,6 +4,10 @@ doc strings
 
 extract the whole drawing business
 
+make all things like .vertices() into .vertices
+
 take care of lingering TODOs
+
+single-pixel rounding error on little splits?
 
 Small diagonals form after a hundred

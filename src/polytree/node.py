@@ -124,6 +124,16 @@ class Node():
 
         return Coord(round(mean(x)), round(mean(y)))
 
+    def get_neighbors(self):
+        neighbors = []
+
+        for edge in self.registry.get_edges(self):
+            for node in edge.nodes():
+                if node is not None and node is not self and node not in neighbors:
+                    neighbors.append(node)
+
+        return neighbors
+
     def add_to_draw(self, draw, label=None, color=None, label_color=None, fill_color=None, width=None):
 
         color = DEFAULT_LINE_COLOR if color is None else color
@@ -161,7 +171,7 @@ class Node():
             b = self.child_b.id
 
         if self.vertices:
-            vertices = "\n ".join([v.__repr__() for v in self.vertices])
+            vertices = "\n".join([v.__repr__() for v in self.vertices])
         else:
             vertices = None
-        return f"({parent}) <- ({self.id}) -> ({a}) ({b}) :\n {vertices}"
+        return f"({parent}) <- ({self.id}) -> ({a}) ({b}) : {[v.coords() for v in self.vertices]}"

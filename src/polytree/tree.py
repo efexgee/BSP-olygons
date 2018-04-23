@@ -9,6 +9,7 @@ from polytree.edge import Edge
 from PIL import Image, ImageDraw
 from random import choice, sample
 from polytree.functions import split_edge, update_edges_from_new_edge, follow_edges
+from polytree.globals import *
 
 class Tree():
     ''' a binary tree of Rectangles '''
@@ -85,11 +86,13 @@ class Tree():
             Default direction is to split across the shorter
             dimension (random for squares), and at 50%. '''
 
-        even = True
+        #print(f"split_node: even={even}")
+
+        even = DEFAULT_SPLIT_EVEN if even is None else even
 
         old_node = self.get(id)
 
-        print(f"\n= Splitting Node {id} {direction}-wise (probably into Node {self.max_id + 1} & Node {self.max_id + 2})")
+        print(f"= Splitting Node {id} {direction}-wise (probably into Node {self.max_id + 1} & Node {self.max_id + 2})")
 
         # Check if node exist
         #TODO should this be handled by .get()?
@@ -169,6 +172,26 @@ class Tree():
 
         #print(f"= Done splitting")
 
+    def connections(self):
+        connections = EdgeRegistry()
+        DEBUG_SET = set()
+
+        for edge in self.registry:
+            if None not in edge.nodes():
+                #print(f"Edge nodes: {edge.nodes()}")
+                neighbors = [edge._left_node.id, edge._right_node.id]
+                neighbors.sort()
+                neighbors = tuple(neighbors)
+                #print(f"Pair of neighbors: {neighbors}")
+                assert neighbors not in DEBUG_SET, f"Duplicate of {neighbors}"
+                DEBUG_SET.add(neighbors)
+
+                vertex_l = Vertex(edge._left_node.centroid())
+                vertex_r = Vertex(edge._right_node.centroid())
+                connections.append(Edge(vertex_l, vertex_r, None, None))
+
+        return connections
+
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer
             below Node start_id. (Default is the root Node) '''
@@ -182,7 +205,11 @@ class Tree():
         return set(walk(self.get(start_id)))
 
     def add_to_draw(self, draw, highlight=None, highlight_color=None, labels=None, color=None, width=None):
-        ''' Draw the Tree onto a provided PIL Draw object '''
+        ''' Add a graphical representation of the Tree to a
+        'draw' object, which optional highlighting of Edges
+        or Nodes (by Node or node ID) '''
+
+        #TODO the tree should draw Nodes and label and highlight Nodes
 
         highlighted = []
 
@@ -195,11 +222,11 @@ class Tree():
 
         self.registry.add_to_draw(draw, highlighted, highlight_color, labels, color, width)
 
-    def show(self, highlight=None, highlight_color=None, labels=None, color=None, width=None):
+    def show(self, background_color=DEFAULT_BACKGROUND_COLOR, highlight=None, highlight_color=None, labels=None, color=None, width=None):
         ''' Display the Tree '''
         img_size = self.canvas + 1
 
-        img = Image.new("RGBA", img_size.as_tuple(), "green")
+        img = Image.new("RGBA", img_size.as_tuple(), background_color)
 
         draw = ImageDraw.Draw(img)
 

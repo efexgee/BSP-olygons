@@ -61,7 +61,7 @@ reg.extend((e_four, e_five, e_six, e_seven, e_eight))
 
 #print(f"tri_L: {tri_L}")
 
-reg.add_to_draw(draw)
+#reg.add_to_draw(draw)
 #tri_L.centroid().add_to_draw(draw)
 
 # registry for split testing
@@ -90,11 +90,11 @@ new_edge = e_db
 old_node = node_m
 
 baum = Tree(XY(800))
-#baum.split(0)
 
 print("End of poly_tree.test setup") 
 
 def splits(tree, times, even=None):
+    #print(f"Splitting {times} times (even={even})")
     for _ in range(times):
         #tree.split(choice(list(tree.leaves())))
         leaves = list(tree.leaves())
@@ -103,7 +103,8 @@ def splits(tree, times, even=None):
 
         #target_node_id = oldest
         target_node_id = rnd_leaf
-        tree.split_node(target_node_id, even)
+        #print(f"splits(): even={even}")
+        tree.split_node(target_node_id, even=even)
 
 def test_oppo(tree):
     node = tree.get(choice(list(baum.leaves())))

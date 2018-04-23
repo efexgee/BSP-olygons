@@ -12,6 +12,7 @@ from polytree.globals import *
 class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
 
+    #TODO can the nodes be defaulted to None?
     def __init__(self, tail, head, left_node, right_node):
         #Needed if we use the connect methods below?
         self._tail = None
@@ -116,6 +117,9 @@ class Edge():
         #FEATURE use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
 
+    def nodes(self):
+        return self._left_node, self._right_node
+
     def connect_tail(self, vertex):
         assert not self._tail, f"_tail of {self} is already set: {self._tail}"
         self._tail = vertex
@@ -131,7 +135,11 @@ class Edge():
 
         labels = DEFAULT_SHOW_LABELS if labels is None else labels
         # Label color defaults to the line color
-        label_color = color if label_color is None else label_color
+        if label_color is None:
+            if color:
+                label_color = color
+            else:
+                label_color = DEFAULT_LABEL_COLOR
 
         #print(f"Edge: adding {self} in {color}")
         line = Line(self._tail, self._head)
@@ -140,6 +148,8 @@ class Edge():
 
         if labels:
             #print(f"Labeling {self}")
+
+            #TODO don't draw labels if too small, somehow
 
             if self._right_node:
                 #print(f"Labeling with {color} {self._right_node.id}")
