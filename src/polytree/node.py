@@ -30,10 +30,15 @@ class Node():
         # the Vertices are not defined yet
         self.vertices = vertices
 
-    def get_edges(self):
+    #ASK what is OK as a property?
+    #ASK any method which returns something, has no side effects, and takes no args?
+    #ASK yet there is a line with 'edges' and 'get_neighbors'
+    @property
+    def edges(self):
         return self.registry.get_edges(self)
 
-    def get_sides(self):
+    @property
+    def sides(self):
         # Pick an arbitrary Vertex on the Node
         starting_vertex = self.vertices[0]
 
@@ -109,6 +114,7 @@ class Node():
 
         return most_opposite_edge(side, sides)
 
+    @property
     def centroid(self):
         ''' Return the centroid of a Node '''
 

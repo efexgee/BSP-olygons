@@ -1,13 +1,32 @@
-comment
+doors
+    refactor adj viz
+    insert vertices
+        prolly extract some methods
+    door extance probability
+    door width
 
-doc strings
+write tests
 
-extract the whole drawing business
+don't put DEFAULT values in a module? #ASK
+
+change drawing attributes to conf object
+
+selecting edges by node:node?
+
+dead spaces
+
+peturbations
+    check for intersecting lines
 
 make all things like .vertices() into .vertices
 
 take care of lingering TODOs
+    iterator on XY to act as tuple?
+
+write own label coord function
 
 single-pixel rounding error on little splits?
 
 Small diagonals form after a hundred
+
+pathing/mazing for door placement

@@ -37,7 +37,7 @@ class Tree():
 
         self.canvas = dimensions
 
-    def get(self, id):
+    def get_node(self, id):
         ''' return the Node with the specified id '''
         #TODO what happens if the node doesn't exist?
         def walk(cur, id):
@@ -90,12 +90,12 @@ class Tree():
 
         even = DEFAULT_SPLIT_EVEN if even is None else even
 
-        old_node = self.get(id)
+        old_node = self.get_node(id)
 
         print(f"= Splitting Node {id} {direction}-wise (probably into Node {self.max_id + 1} & Node {self.max_id + 2})")
 
         # Check if node exist
-        #TODO should this be handled by .get()?
+        #TODO should this be handled by .get_node()?
         if old_node is None:
             #TIDY IndexError?
             raise IndexError(f"Could not find Node {id}")
@@ -202,7 +202,7 @@ class Tree():
             else:
                 return walk(node.child_a) + walk(node.child_b)
 
-        return set(walk(self.get(start_id)))
+        return set(walk(self.get_node(start_id)))
 
     def add_to_draw(self, draw, highlight=None, highlight_color=None, labels=None, color=None, width=None):
         ''' Add a graphical representation of the Tree to a
@@ -216,7 +216,7 @@ class Tree():
         if highlight:
             for entry in highlight:
                 if isinstance(entry, int):
-                    highlighted.append(self.get(entry))
+                    highlighted.append(self.get_node(entry))
                 else:
                     highlighted.append(entry)
 

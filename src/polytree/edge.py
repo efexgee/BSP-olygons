@@ -13,10 +13,11 @@ class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
 
     #TODO can the nodes be defaulted to None?
-    def __init__(self, tail, head, left_node, right_node):
+    def __init__(self, tail, head, left_node, right_node, transparent=False):
         #Needed if we use the connect methods below?
         self._tail = None
         self._head = None
+        self.transparent = transparent
 
         self.connect_tail(tail)
         self.connect_head(head)
@@ -130,8 +131,13 @@ class Edge():
         self._head = vertex
         vertex.add_edge(self)
 
-    def add_to_draw(self, draw, labels=None, color=None, label_color=None, width=None):
+    def add_to_draw(self, draw, labels=None, color=None, label_color=None, width=None, force_draw=None):
         ''' Add Edge to the specified PIL draw object '''
+
+        # Don't draw invisible Edges unless force_draw is specified
+        if self.transparent and not force_draw:
+            #print(f"Skipping transparent Edge: {self}")
+            return
 
         labels = DEFAULT_SHOW_LABELS if labels is None else labels
         # Label color defaults to the line color
@@ -199,4 +205,5 @@ class Edge():
         if self._right_node:
             right_node = self._right_node.id
 
-        return f"{colored(str(self._tail.as_tuple()),'magenta')}-{left_node}|{right_node}-{colored(str(self._head.as_tuple()),'magenta')}"
+        #ASK if statement inside f-string?
+        return f"{colored(str(self._tail.as_tuple()),'magenta')}-{left_node}|{right_node}-{colored(str(self._head.as_tuple()),'magenta')}{' (transparent)' if self.transparent else ''}"
