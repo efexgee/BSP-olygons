@@ -57,6 +57,7 @@ class EdgeRegistry(UserList):
             #print(f"EdgeRegistry: adding {edge} to {draw}: labels={labels} color={edge_color} width={width}")
             edge.add_to_draw(draw, labels, edge_color, width)
 
+    #ASK on the fence on @property vs. method
     def canvas_size(self):
         ''' Return the size an Image has to be to fit all the Edges '''
         max_x = 0
@@ -75,4 +76,4 @@ class EdgeRegistry(UserList):
         if len(self) > 10:
             return f"[Registry contains {len(self)} Edges]"
         else:
-            return "\n".join(super().__repr__)
+            return super().__repr__()

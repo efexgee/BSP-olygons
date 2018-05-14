@@ -65,7 +65,7 @@ class Tree():
 
         #print(f" Looking for {point}")
 
-        for vertex in side.vertices():
+        for vertex in side.vertices:
             if vertex == point:
                 # Found our vertex
                 #print(f" {vertex} is at {point}")
@@ -172,26 +172,39 @@ class Tree():
 
         #print(f"= Done splitting")
 
-    def connections(self):
-        connections = EdgeRegistry()
-        DEBUG_SET = set()
+    #ASK making the call here to put get_shared_edges() in Tree, rather than Registry
+    def get_shared_edges(self):
+        ''' Returns a List of Edges which are shared by two Nodes '''
+
+        shared_edges = []
 
         for edge in self.registry:
-            if None not in edge.nodes():
-                #print(f"Edge nodes: {edge.nodes()}")
-                neighbors = [edge._left_node.id, edge._right_node.id]
-                neighbors.sort()
-                neighbors = tuple(neighbors)
-                #print(f"Pair of neighbors: {neighbors}")
-                assert neighbors not in DEBUG_SET, f"Duplicate of {neighbors}"
-                DEBUG_SET.add(neighbors)
+            # Skip border Edges
+            if None in edge.nodes:
+                continue
 
-                vertex_l = Vertex(edge._left_node.centroid())
-                vertex_r = Vertex(edge._right_node.centroid())
+            shared_edges.append(edge)
+
+        #ASK return List or Tuple? Doesn't matter b/c really iterable?
+        return shared_edges
+
+    #ASK also on fence re: @property on this one
+    def connections(self):
+        ''' Returns a Registry of Edges connecting the centroids of
+        all adjacent Nodes in the Tree '''
+
+        connections = EdgeRegistry()
+
+        for edge in self.get_shared_edges():
+            if None not in edge.nodes:
+                vertex_l = Vertex(edge._left_node.centroid)
+                vertex_r = Vertex(edge._right_node.centroid)
+
                 connections.append(Edge(vertex_l, vertex_r, None, None))
 
         return connections
 
+    #ASK would like to make this a @property, but supports an arg
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer
             below Node start_id. (Default is the root Node) '''
@@ -222,7 +235,7 @@ class Tree():
 
         self.registry.add_to_draw(draw, highlighted, highlight_color, labels, color, width)
 
-    def show(self, background_color=DEFAULT_BACKGROUND_COLOR, highlight=None, highlight_color=None, labels=None, color=None, width=None):
+    def show(self, background_color=DEFAULT_BACKGROUND_COLOR, highlight=None, highlight_color=None, labels=None, color=None, width=None, connections=False):
         ''' Display the Tree '''
         img_size = self.canvas + 1
 
@@ -231,6 +244,9 @@ class Tree():
         draw = ImageDraw.Draw(img)
 
         self.add_to_draw(draw, highlight, highlight_color, labels, color, width)
+
+        if connections:
+            self.connections().add_to_draw(draw, color=CONNECTION_LINE_COLOR)
 
         img.show()
 

@@ -8,7 +8,7 @@ from polytree.edge import Edge
 from polytree.tree import Tree
 from polytree.xy import XY
 from random import choice
-from polytree.functions import update_edges_from_new_edge
+from polytree.functions import update_edges_from_new_edge, place_door_on_edge
 
 img = Image.new("RGBA", (800, 800), "white")
 draw = ImageDraw.Draw(img)

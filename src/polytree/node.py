@@ -97,16 +97,17 @@ class Node():
 
     def get_rnd_side(self, exclude=None):
         #TODO do I need exclusions anymore?
-        sides = self.get_sides()
+        sides = self.sides
 
         if exclude:
+            print(f"WE ARE STILL USING EXCLUSIONS!")
             for exclusion in exclude:
                 sides.remove(exclusion)
 
         return choice(sides)
 
     def get_opp_side(self, side):
-        sides = self.get_sides()
+        sides = self.sides
         #print(f"Source Side: {side}")
 
         sides.remove(side)
@@ -151,6 +152,7 @@ class Node():
         polygon_coords = [vertex.as_tuple() for vertex in self.vertices]
         print(polygon_coords)
 
+        #TODO drawing via draw.polygon requires order or vertices, too fragile
         if fill_color is None:
             draw.polygon(polygon_coords, outline=color)
         else:
@@ -158,7 +160,7 @@ class Node():
 
         if label:
             #print(f"Labeling {self}")
-            draw.text(self.centroid().as_tuple(), str(self.id), label_color)
+            draw.text(self.centroid.as_tuple(), str(self.id), label_color)
 
     def __repr__(self):
         if self.parent is None:

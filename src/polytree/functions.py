@@ -109,3 +109,47 @@ def split_edge(edge, percentage, registry):
     registry.extend((edge_a, edge_b))
 
     return edge_a, vertex, edge_b
+
+def place_door_on_edge(registry, edge, percentage, door_width):
+
+    print(f"Placing {door_width}-pixel door in {edge} at {percentage}%")
+
+    #TODO catchy variable names!
+    # Calculate door width as a percentage of Edge length
+    door_width_as_pct = door_width / edge.length() * 100
+    print(f"Door is {door_width_as_pct}% as wide as {edge} (length = {edge.length()})")
+    half_door_width_as_pct = door_width_as_pct / 2
+
+    #TODO declutter all the head/tail/a/b stuff
+    door_jamb_pct_a = percentage + half_door_width_as_pct
+    door_jamb_pct_b = percentage - half_door_width_as_pct
+
+    #TODO implement this
+    if door_jamb_pct_a >= 100:
+        pass
+
+    if door_jamb_pct_b <= 0:
+        pass
+
+    # Find endpoints of the door
+    door_jamb_coord_a = edge.locate_point(percentage + half_door_width_as_pct)
+    door_jamb_coord_b = edge.locate_point(percentage - half_door_width_as_pct)
+
+    print(f"Door jambs are at {door_jamb_coord_a} and {door_jamb_coord_b}")
+
+    # Insert Vertices
+    # The door will be the tail segment of the second split
+    #ASK too obscure/fragile?
+    tail_to_A, _, A_to_head = edge.insert_vertex(door_jamb_coord_a)
+    door, _ , B_to_head = A_to_head.insert_vertex(door_jamb_coord_b)
+
+    registry.remove(edge)
+
+    registry.append(tail_to_A)
+    registry.append(door)
+    registry.append(B_to_head)
+
+    # Make door transparent
+    door.transparent = True
+
+    print(f"Created door {door}")

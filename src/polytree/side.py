@@ -31,11 +31,12 @@ class Side(Edge):
     def find_point(self, percentage):
         return Line(self._tail, self._head).find_point(percentage)
 
+    @property
     def vertices(self):
         vertices = []
 
         for edge in self.edges:
-            for vertex in edge.vertices():
+            for vertex in edge.vertices:
                 if vertex not in vertices:
                     vertices.append(vertex)
 

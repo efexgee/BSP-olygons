@@ -9,6 +9,7 @@ from polytree.vertex import Vertex
 #from PIL import Image, ImageDraw
 from polytree.globals import *
 
+#ASK/TODO why does edge not inherit from Line?
 class Edge():
     ''' Connects two Vertices and the Nodes shared by the Edge '''
 
@@ -114,10 +115,15 @@ class Edge():
         else:
             raise ValueError(f"{caller} {colored('is neither','red')}\n{self._tail} {colored('nor','red')}\n{self._head}")
 
+    def length(self):
+        return Line(self._tail, self._head).length()
+
+    @property
     def vertices(self):
         #FEATURE use property if I want to fake an attribute ("descriptor")
         return self._tail, self._head
 
+    @property
     def nodes(self):
         return self._left_node, self._right_node
 

@@ -103,6 +103,7 @@ class XY():
 
         return XY(x, y)
 
+    #ASK for some reason I think @property is no good here
     def magnitude(self):
         return hypot(self.x, self.y)
 

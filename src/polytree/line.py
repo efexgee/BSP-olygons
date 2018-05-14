@@ -47,6 +47,7 @@ class Line():
 
         return label_loc_xy(self._tail, self._head, offset)
 
+    @property
     def end_points(self):
         ''' Returns the Line's two Coords as a tuple '''
         #FEATURE use property if I want to fake an attribute ("descriptor")
@@ -68,6 +69,9 @@ class Line():
             angle = degrees(rads)
 
         return angle
+
+    def length(self):
+        return (self._head - self._tail).magnitude()
 
     def add_to_draw(self, draw, color=None, width=None):
 
