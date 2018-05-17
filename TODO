@@ -5,6 +5,8 @@ doors
     door extance probability
     door width
 
+don't do percentages in a sane, human way
+
 write tests
 
 don't put DEFAULT values in a module? #ASK

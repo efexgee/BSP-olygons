@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#TODO take out all these shebangs!
 
 #TODO how to pep8?
 
@@ -172,9 +173,10 @@ class Tree():
 
         #print(f"= Done splitting")
 
-    #ASK making the call here to put get_shared_edges() in Tree, rather than Registry
+    #TODO is this just for doors? used by connections()
+    #TODO otherwise, put in registry
     def get_shared_edges(self):
-        ''' Returns a List of Edges which are shared by two Nodes '''
+        ''' Returns a List of Edges which are shared by any two Nodes '''
 
         shared_edges = []
 
@@ -185,10 +187,9 @@ class Tree():
 
             shared_edges.append(edge)
 
-        #ASK return List or Tuple? Doesn't matter b/c really iterable?
         return shared_edges
 
-    #ASK also on fence re: @property on this one
+    #TODO rename to connectome
     def connections(self):
         ''' Returns a Registry of Edges connecting the centroids of
         all adjacent Nodes in the Tree '''
@@ -204,7 +205,6 @@ class Tree():
 
         return connections
 
-    #ASK would like to make this a @property, but supports an arg
     def leaves(self, start_id=0):
         ''' List the ids of all the leaf Nodes in the Treer
             below Node start_id. (Default is the root Node) '''

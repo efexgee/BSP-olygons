@@ -37,9 +37,8 @@ class EdgeRegistry(UserList):
 
         highlighted_edges = []
 
-        if highlight:
+        if highlight is not None:
             for highlighted in highlight: 
-                #HELP how do I do this correctly?
                 #TODO should have tuples of highlighted and colors
                 if isinstance(highlighted, Edge):
                     highlighted_edges.append(highlighted)
@@ -57,7 +56,7 @@ class EdgeRegistry(UserList):
             #print(f"EdgeRegistry: adding {edge} to {draw}: labels={labels} color={edge_color} width={width}")
             edge.add_to_draw(draw, labels, edge_color, width)
 
-    #ASK on the fence on @property vs. method
+    #TODO argue with self about renaming and method, or property
     def canvas_size(self):
         ''' Return the size an Image has to be to fit all the Edges '''
         max_x = 0

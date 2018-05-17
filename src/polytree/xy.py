@@ -103,7 +103,7 @@ class XY():
 
         return XY(x, y)
 
-    #ASK for some reason I think @property is no good here
+    @property
     def magnitude(self):
         return hypot(self.x, self.y)
 
@@ -117,7 +117,7 @@ class XY():
     def as_tuple(self):
         return (self.x, self.y)
 
-    #HELP should this only exist on Coord?
+    #TODO should only exist on Coord
     def add_to_draw(self, draw, color=None, size=None):
         ''' Add a point at XY to a PIL draw object '''
 
@@ -138,13 +138,10 @@ class Coord(XY):
     def __init__(self, x, y=None):
         super().__init__(x, y)
 
-        #HELP hacky? I like it
         if self.x < 0 or self.y < 0:
             raise ValueError(f"Coords must be non-negative: x={x} y={y}")
 
-    #HELP wrap here, don't squeeze logic into XY, right?
     def __sub__(self, value):
-        #HELP math once, coerce many, right? less noisy
         result = super().__sub__(value)
 
         if isinstance(value, Coord):
@@ -171,7 +168,6 @@ class Offset(XY):
     ''' The offset between two XY coordinates '''
 
     def __sub__(self, value):
-       #HELP math once, coerce many, right? less noisy
        result = super().__sub__(value)
 
        if isinstance(value, Offset):

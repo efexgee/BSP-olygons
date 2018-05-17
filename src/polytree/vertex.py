@@ -27,8 +27,8 @@ class Vertex(Coord):
         self.add_edge(edge)
         edge.connect_head(self)
 
-    #HELP how do we feel about this?
     def coords(self):
+        #TODO wtf? this should be a string. I can't do anything with a string
         return super().__repr__()
 
     def __repr__(self):

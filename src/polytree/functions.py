@@ -20,7 +20,7 @@ def most_opposite_edge(edge, edges):
     for other_edge in edges:
         other_midpoint = other_edge.locate_point(50)
 
-        #HELP how would sanely make Edge coercable to Line?
+        #TODO why does Edge not inherit from Line?
         angle = Line(edge._tail, edge._head).angle_between(Line(edge_midpoint, other_midpoint))
         #print(f"     Considering {other_edge} at midpoint {other_midpoint.as_tuple()} makes angle {int(angle)}")
 
@@ -110,6 +110,7 @@ def split_edge(edge, percentage, registry):
 
     return edge_a, vertex, edge_b
 
+#TODO not "place"... 
 def place_door_on_edge(registry, edge, percentage, door_width):
 
     print(f"Placing {door_width}-pixel door in {edge} at {percentage}%")
@@ -120,7 +121,7 @@ def place_door_on_edge(registry, edge, percentage, door_width):
     print(f"Door is {door_width_as_pct}% as wide as {edge} (length = {edge.length()})")
     half_door_width_as_pct = door_width_as_pct / 2
 
-    #TODO declutter all the head/tail/a/b stuff
+    #TODO declutter all the head/tail/a/b stuff (don't call things a/b)
     door_jamb_pct_a = percentage + half_door_width_as_pct
     door_jamb_pct_b = percentage - half_door_width_as_pct
 
@@ -139,10 +140,14 @@ def place_door_on_edge(registry, edge, percentage, door_width):
 
     # Insert Vertices
     # The door will be the tail segment of the second split
-    #ASK too obscure/fragile?
+    # T==========A=============H
+    # T==========A-----B=======H
+
+    #TODO confusing. make function?
     tail_to_A, _, A_to_head = edge.insert_vertex(door_jamb_coord_a)
     door, _ , B_to_head = A_to_head.insert_vertex(door_jamb_coord_b)
 
+    #TODO do this whole thing as a .replace(old, [new,new,new])
     registry.remove(edge)
 
     registry.append(tail_to_A)

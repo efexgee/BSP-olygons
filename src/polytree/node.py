@@ -30,9 +30,6 @@ class Node():
         # the Vertices are not defined yet
         self.vertices = vertices
 
-    #ASK what is OK as a property?
-    #ASK any method which returns something, has no side effects, and takes no args?
-    #ASK yet there is a line with 'edges' and 'get_neighbors'
     @property
     def edges(self):
         return self.registry.get_edges(self)
@@ -90,6 +87,8 @@ class Node():
     def get_opp_edge(self, edge):
         #TODO Still used?
         edges = self.get_edges()
+
+        print("WE ARE STILL USING get_opp_edge!")
 
         edges.remove(edge)
 

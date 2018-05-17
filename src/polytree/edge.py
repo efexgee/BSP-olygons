@@ -46,6 +46,7 @@ class Edge():
 
         return Line(self._tail, self._head).find_point(percentage)
 
+    #TODO should this be a method? probably
     def split(self, percentage):
         #TODO should this support relative to caller?
         ''' Insert a new vertex percentage of the way from tail
@@ -55,6 +56,9 @@ class Edge():
 
         return self.insert_vertex(coords)
 
+    #TODO this is not a good name for a thing that returns stuff
+    #TODO also, this allows a vertex anywhere!
+    #TODO should this be a method?
     def insert_vertex(self, coords):
         ''' Insert a new vertex, splitting the Edge in two '''
 
@@ -211,5 +215,5 @@ class Edge():
         if self._right_node:
             right_node = self._right_node.id
 
-        #ASK if statement inside f-string?
+        #TODO assemble this string in a sep conditional
         return f"{colored(str(self._tail.as_tuple()),'magenta')}-{left_node}|{right_node}-{colored(str(self._head.as_tuple()),'magenta')}{' (transparent)' if self.transparent else ''}"

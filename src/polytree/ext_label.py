@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from polytree.xy import Coord
 
-LOGGER = logging.getLogger("label.py")
+LOGGER = logging.getLogger(__name__)
 
 def label_location(start, end, distance=0.1):
     """
@@ -70,7 +70,7 @@ def label_loc_xy(start, end, distance=0.1):
     #TODO should be doing the single-default thing
     x, y = label_location(start, end, distance)
 
-    #HELP which method?
+    #TODO what are you smoking??? who knows
     return Coord(int(round(x)), round(float(y)))
 
 def test_label():
