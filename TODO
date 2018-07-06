@@ -7,12 +7,6 @@ doors
 
 don't do percentages in a sane, human way
 
-write tests
-
-don't put DEFAULT values in a module? #ASK
-
-change drawing attributes to conf object
-
 selecting edges by node:node?
 
 dead spaces
@@ -20,15 +14,7 @@ dead spaces
 peturbations
     check for intersecting lines
 
-make all things like .vertices() into .vertices
-
 take care of lingering TODOs
     iterator on XY to act as tuple?
-
-write own label coord function
-
-single-pixel rounding error on little splits?
-
-Small diagonals form after a hundred
 
 pathing/mazing for door placement
